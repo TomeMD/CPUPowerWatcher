@@ -17,11 +17,9 @@ mkdir -p $LOG_DIR
 # Start monitoring environment
 if [ "$USE_DOCKER" -eq "0" ]; then
 	docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 2" -v $(pwd)/${GLANCES_HOME}/etc/glances.conf:/glances/conf/glances.conf glances
-	sleep 6
 	docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl
 else
 	sudo apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" --bind ${GLANCES_HOME}/etc/glances.conf:/glances/conf/glances.conf ${GLANCES_HOME}/glances.sif glances
-	sleep 6
 	sudo apptainer instance start ${RAPL_HOME}/rapl.sif rapl
 fi
 
