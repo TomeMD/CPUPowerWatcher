@@ -10,28 +10,36 @@ sleep 30 # Initial wait
 
 NAME="CG"
 print_timestamp "NPB START"
-${NPB_HOME}/bin/cg.C.x | tee -a $LOG_FILE
+for i in $(seq 1 5); do
+	${NPB_HOME}/bin/cg.C.x | tee -a $LOG_FILE
+done
 print_timestamp "NPB STOP"
 
 sleep 10
 
 NAME="FT"
 print_timestamp "NPB START"
-${NPB_HOME}/bin/ft.C.x | tee -a $LOG_FILE
+for i in $(seq 1 5); do
+	${NPB_HOME}/bin/ft.C.x | tee -a $LOG_FILE
+done
 print_timestamp "NPB STOP"
 
 sleep 10
 
 NAME="MG"
 print_timestamp "NPB START"
-${NPB_HOME}/bin/mg.C.x | tee -a $LOG_FILE
+for i in $(seq 1 5); do
+	${NPB_HOME}/bin/mg.C.x | tee -a $LOG_FILE
+done
 print_timestamp "NPB STOP"
 
 sleep 10
 
 NAME="BT"
 print_timestamp "NPB START"
-${NPB_HOME}/bin/bt.C.x | tee -a $LOG_FILE
+for i in $(seq 1 5); do
+	${NPB_HOME}/bin/bt.C.x | tee -a $LOG_FILE
+done
 print_timestamp "NPB STOP"
 
 END=$(date +%s%N)
