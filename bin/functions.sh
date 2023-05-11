@@ -50,6 +50,19 @@ function idle_cpu() {
 
 export -f idle_cpu
 
+function run_npb_kernel() {
+	local KERNEL=$1
+	print_timestamp "NPB START"
+	for NUM_THREADS in $(seq 2 2 $THREADS)
+	do
+	    export OMP_NUM_THREADS=$NUM_THREADS
+	    timeout 5m bash -c 'while true; do ${NPB_HOME}/${KERNEL}| tee -a $LOG_FILE; done'
+	done
+	print_timestamp "NPB STOP"
+}
+
+export -f run_npb_kernel
+
 ################################################################################################
 # run_experiment <NAME> <CORES_PER_CPU> <PAIR_OFFSET> <INCREMENT> <CPU_SWITCH> <TOTAL_PAIRS>
 ################################################################################################
