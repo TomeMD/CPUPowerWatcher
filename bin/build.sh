@@ -4,7 +4,7 @@ cd bin
 
 # Download and set monitoring environment
 if [ ! -d "glances_influxdb_grafana" ]; then
-	echo "Installing monitong environment..."
+	echo "Installing monitoring environment..."
 	git clone https://github.com/TomeMD/glances_influxdb_grafana.git
 	cd glances_influxdb_grafana
 	sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' glances/etc/glances.conf
@@ -50,11 +50,12 @@ if [ "$RUN_NPB" -eq "0" ]; then
 		rm NPB3.4.2.tar.gz
 		cd NPB3.4.2/NPB3.4-OMP
 		cp config/make.def.template config/make.def
-		make cg CLASS=C
+		make is CLASS=C
 		make ft CLASS=C
 		make mg CLASS=C
+		make cg CLASS=C
 		make bt CLASS=C
-		cd .. && cd ..
+		cd ../..
 	else
 		echo "NPB kernels were already downloaded"
 	fi
