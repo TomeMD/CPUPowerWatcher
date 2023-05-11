@@ -51,12 +51,12 @@ function idle_cpu() {
 export -f idle_cpu
 
 function run_npb_kernel() {
-	local KERNEL=$1
+	local COMMAND="while true; do ${NPB_HOME}/${1} | tee -a ${LOG_FILE}; done"
 	print_timestamp "NPB START"
 	for NUM_THREADS in $(seq 2 2 $THREADS)
 	do
 	    export OMP_NUM_THREADS=$NUM_THREADS
-	    timeout 5m bash -c 'while true; do ${NPB_HOME}/${KERNEL}| tee -a $LOG_FILE; done'
+	    timeout 5m bash -c "$COMMAND"
 	done
 	print_timestamp "NPB STOP"
 }
