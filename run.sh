@@ -4,6 +4,7 @@ export OUTPUT_DIR=log/
 export RUN_NPB=1
 export RUN_GEEKBENCH=1
 export USE_DOCKER=0
+export GEEKBENCH_VERSION="5.4.1"
 
 . ./bin/parse-arguments.sh
 
