@@ -2,6 +2,7 @@
 
 export OUTPUT_DIR=log/
 export RUN_NPB=1
+export RUN_GEEKBENCH=1
 export USE_DOCKER=0
 
 . ./bin/parse-arguments.sh
@@ -16,6 +17,11 @@ if [ "$RUN_NPB" -eq "0" ]; then
   . ./bin/init.sh
   . ./bin/npb-tests.sh
   . ./bin/finish.sh
+elif [ "$RUN_GEEKBENCH" -eq "0" ]; then
+  echo "Running Geekbench tests..."
+  . ./bin/init.sh
+  . ./bin/geekbench-tests.sh
+  . ./bin/finish.sh 
 else
   echo "Running stress tests..."
   SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')

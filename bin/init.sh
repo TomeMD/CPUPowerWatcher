@@ -6,6 +6,7 @@ export GLANCES_HOME=${BIN_DIR}/glances_influxdb_grafana/glances
 export RAPL_HOME=${BIN_DIR}/glances_influxdb_grafana/rapl
 export STRESS_HOME=${BIN_DIR}/stress-system/container
 export NPB_HOME=${BIN_DIR}/NPB3.4.2/NPB3.4-OMP
+export GEEKBENCH_HOME=${BIN_DIR}/Geekbench-${GEEKBENCH_VERSION}-Linux
 
 # Logs
 export LOG_DIR=${BIN_DIR}/../${OUTPUT_DIR}

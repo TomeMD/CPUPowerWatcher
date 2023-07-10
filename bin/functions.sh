@@ -65,6 +65,15 @@ function run_npb_kernel() {
 
 export -f run_npb_kernel
 
+function run_geekbench() {
+	print_timestamp "GEEKBENCH (CORES = $CORES) START"
+	taskset -c ${CORES} ${GEEKBENCH_HOME}/geekbench_x86_64 | tee -a ${LOG_FILE}
+	print_timestamp "GEEKBENCH (CORES = $CORES) STOP"
+	sleep 15
+}
+
+export -f run_npb_kernel
+
 ################################################################################################
 # run_experiment <NAME> <CORES_PER_CPU> <PAIR_OFFSET> <INCREMENT> <CPU_SWITCH> <TOTAL_PAIRS>
 ################################################################################################
@@ -94,6 +103,7 @@ function run_experiment() {
 	PAIR_OFFSET=$4
 	INCREMENT=$5
 	CPU_SWITCH=$6
+	TEST_COMMAND=$7
 	if [ $CPU_SWITCH -eq $(($CORES_PER_CPU / 2)) ]; then
 		CORES_ARRAY=(0 $(($CORES_PER_CPU * 2)))
 	else
@@ -106,7 +116,7 @@ function run_experiment() {
 	local START_TEST=$(date +%s%N)
 	while [ $PAIRS_COUNT -lt $TOTAL_PAIRS ]; do
 	    get_cores
-	    stress_cpu
+	    "$TEST_COMMAND"
 	    idle_cpu
 	    LOAD=$((LOAD + 200))
 	    PAIRS_COUNT=$((PAIRS_COUNT + 1))

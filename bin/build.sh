@@ -61,4 +61,16 @@ if [ "$RUN_NPB" -eq "0" ]; then
 	fi
 fi
 
+export GEEKBENCH_VERSION="5.4.1"
+if [ "$RUN_GEEKBENCH" -eq "0" ]; then
+	if [ ! -d "Geekbench-${GEEKBENCH_VERSION}-Linux" ]; then
+		echo "Downloading Geekbench..."
+		wget https://cdn.geekbench.com/Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
+		tar -xf Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
+		rm Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
+	else
+		echo "Geekbench was already downloaded"
+	fi
+fi
+
 cd ..
