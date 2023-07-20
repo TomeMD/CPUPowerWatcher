@@ -5,9 +5,11 @@ function usage {
 Usage: $(basename "$0") [OPTIONS]
 
 Options:
-  -d, --docker <0-or-1>    Set to 0 to use Docker or 1 to use Apptainer. [Default: 0]
-  -n, --npb <T>            Set 0 for running NPB kenerls instead of running stress-tests [Default: 1]
-  -g, --geekbench <T>      Set 0 for running Geekbench kenerls instead of running stress-tests [Default: 1]
+  -d, --docker             Use Docker for OS-level virtualization. [Default]
+  -a, --apptainer          Use Apptainer for OS-level virtualization.
+  -s, -stress-tests        Run stress tests using stress-system tool. [Default]
+  -n, --npb                Run NPB kenerls.
+  -g, --geekbench          Run Geekbench kenerls.
   -o, --output <dir>       Directory to store log files. [Default: ./log]      
   -h, --help               Show this help and exit
 EOF
@@ -21,16 +23,24 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -d|--docker)
-      USE_DOCKER="$2"
-      shift 2
+      OS_VIRT="docker"
+      shift 1
+      ;;
+    -a|--apptainer)
+      OS_VIRT="apptainer"
+      shift 1
+      ;;
+    -s|--stress-tests)
+      WORKLOAD="stress-tests"
+      shift 1
       ;;
     -n|--npb)
-      RUN_NPB="$2"
-      shift 2
+      WORKLOAD="npb"
+      shift 1
       ;;
     -g|--geekbench)
-      RUN_GEEKBENCH="$2"
-      shift 2
+      WORKLOAD="geekbench"
+      shift 1
       ;;
     -h|--help)
       usage

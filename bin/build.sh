@@ -1,48 +1,35 @@
 #!/bin/bash
 
-cd bin
-
-# Download and set monitoring environment
-if [ ! -d "glances_influxdb_grafana" ]; then
-	echo "Installing monitoring environment..."
-	git clone https://github.com/TomeMD/glances_influxdb_grafana.git
-	cd glances_influxdb_grafana
-	sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' glances/etc/glances.conf
-	sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' rapl/src/rapl_plot/rapl_plot.c
-	if [ "$USE_DOCKER" -eq "0" ]; then
-		echo "Building Glances..."
-		docker build -t glances ./glances
-		echo "Building RAPL..."
-		docker build -t rapl ./rapl
-	else
-		echo "Building Glances..."
-		cd glances && apptainer build glances.sif glances.def > /dev/null && cd ..
-		echo "Building RAPL..."
-		cd rapl && apptainer build rapl.sif rapl.def > /dev/null && cd ..
-	fi
-	cd ..
+# Set monitoring environment
+cd cpu_power_monitor
+sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' glances/etc/glances.conf
+sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' rapl/src/rapl_plot/rapl_plot.c
+if [ "$OS_VIRT" == "docker" ]; then
+  echo "Building Glances..."
+  docker build -t glances ./glances
+  echo "Building RAPL..."
+  docker build -t rapl ./rapl
 else
-	echo "Monitoring environment was already installed"
+  echo "Building Glances..."
+  cd glances && apptainer build glances.sif glances.def > /dev/null && cd ..
+  echo "Building RAPL..."
+  cd rapl && apptainer build rapl.sif rapl.def > /dev/null && cd ..
 fi
+cd ..
+
 
 # Set stress tool
-if [ ! -d "stress-system" ]; then
-	echo "Installing stress tool..."
-	git clone https://github.com/TomeMD/stress-system.git
-	cd stress-system
-	chmod +x run.sh
-	echo "Building stress-system..."
-	if [ "$USE_DOCKER" -eq "0" ]; then
-		docker build -t stress-system -f container/Dockerfile .
-	else
-		cd container && apptainer build stress.sif stress.def > /dev/null && cd ..
-	fi
-	cd ..
+cd stress-system
+chmod +x run.sh
+echo "Building stress-system..."
+if [ "$OS_VIRT" == "docker" ]; then
+  docker build -t stress-system -f container/Dockerfile .
 else
-	echo "Stress tool was already installed"
+  cd container && apptainer build stress.sif stress.def > /dev/null && cd ..
 fi
+cd ..
 
-if [ "$RUN_NPB" -eq "0" ]; then
+if [ "$WORKLOAD" == "npb" ]; then
 	if [ ! -d "NPB3.4.2" ]; then
 		echo "Downloading NPB kernels..."
 		wget https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz
@@ -59,9 +46,7 @@ if [ "$RUN_NPB" -eq "0" ]; then
 	else
 		echo "NPB kernels were already downloaded"
 	fi
-fi
-
-if [ "$RUN_GEEKBENCH" -eq "0" ]; then
+elif [ "$WORKLOAD" == "geekbench" ]; then
 	if [ ! -d "Geekbench-${GEEKBENCH_VERSION}-Linux" ]; then
 		echo "Downloading Geekbench..."
 		wget https://cdn.geekbench.com/Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
@@ -71,5 +56,3 @@ if [ "$RUN_GEEKBENCH" -eq "0" ]; then
 		echo "Geekbench was already downloaded"
 	fi
 fi
-
-cd ..
