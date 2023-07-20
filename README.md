@@ -1,6 +1,6 @@
 # Stress-test-scripts
 
-Set of scripts to automate CPU utilization and energy consumption monitoring while running stress tests. Options:
+Set of scripts to automate CPU utilization, frequency and energy consumption monitoring while running stress tests. Options:
 
 ````shell
 ~$ ./run.sh --help
