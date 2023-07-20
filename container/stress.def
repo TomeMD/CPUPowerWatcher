@@ -1,0 +1,21 @@
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%files
+  .. /usr/local/bin/stress-system/
+
+%post
+  apt-get update && apt-get install -y stress-ng
+  chmod +x /usr/local/bin/stress-system/run.sh
+
+%runscript
+  OUT_DIR=/tmp/out
+  mkdir -p $OUT_DIR
+  cd /tmp
+  /usr/local/bin/stress-system/run.sh "$@" -o $OUT_DIR
+
+%startscript
+  OUT_DIR=/tmp/out
+  mkdir -p $OUT_DIR
+  cd /tmp
+  /usr/local/bin/stress-system/run.sh "$@" -o $OUT_DIR
