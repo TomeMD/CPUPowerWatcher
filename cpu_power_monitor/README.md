@@ -136,10 +136,14 @@ The deployment of containers using Apptainer will be done manually.
 First, you have to create the images and then you should create instances to run the containers in the background.
 
 #### Building images
-Initially it will be necessary to create an image (.sif file) for the containers for which it is necessary (Glances, RAPL and InfluxDB). In Apptainer you have to care about the directory from which you build the images:
+Initially it will be necessary to create an image (.sif file) for the containers for which it is necessary (Glances, CPUfreq, RAPL and InfluxDB). When using Apptainer you have to care about the directory from which you build the images:
 
 ```shell
 cd glances && apptainer build glances.sif glances.def && cd ..
+```
+
+```shell
+cd cpufreq && apptainer build cpufreq.sif cpufreq.def && cd ..
 ```
 
 ```shell
@@ -163,9 +167,13 @@ Now deploy Grafana:
 apptainer instance start --bind ./grafana/data:/var/lib/grafana --bind ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources docker://grafana/grafana grafana
 ```
 
-Finally, deploy Glances and RAPL containers:
+Finally, deploy Glances, CPUfreq and RAPL containers:
 ```shell
-apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
+apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" glances/glances.sif glances
+```
+
+```shell
+apptainer instance start ${CPUFREQ_HOME}/cpufreq.sif cpufreq
 ```
 
 ```shell
@@ -176,6 +184,7 @@ Once deployed, if you want to stop and remove the instances:
 
 ```shell
 apptainer instance stop rapl
+apptainer instance stop cpufreq
 apptainer instance stop glances
 apptainer instance stop grafana
 apptainer instance stop influxdb
