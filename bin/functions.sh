@@ -29,7 +29,7 @@ export -f get_cores
 
 function stress_cpu() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
-	if [ "$USE_DOCKER" -eq "0" ]; then
+	if [ "$OS_VIRT" == "docker" ]; then
 		docker run --name stress-system -it stress-system -l $LOAD -c $CORES -t 2m >> $LOG_FILE 2>&1
 		docker rm stress-system > /dev/null
 	else
