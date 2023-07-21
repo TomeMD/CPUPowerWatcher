@@ -1,52 +1,50 @@
 #!/bin/bash
 
 # Set monitoring environment
-cd cpu_power_monitor
 sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' glances/etc/glances.conf
 sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' rapl/src/rapl_plot/rapl_plot.c
 if [ "$OS_VIRT" == "docker" ]; then
   echo "Building Glances..."
-  docker build -t glances ./glances
+  docker build -t glances ${GLANCES_HOME}
   echo "Building CPUfreq..."
-  docker build -t cpufreq ./cpufreq
+  docker build -t cpufreq ${CPUFREQ_HOME}
   echo "Building RAPL..."
-  docker build -t rapl ./rapl
+  docker build -t rapl ${RAPL_HOME}
 else
   echo "Building Glances..."
-  cd glances && apptainer build glances.sif glances.def > /dev/null && cd ..
+  cd ${GLANCES_HOME} && apptainer build glances.sif glances.def > /dev/null
   echo "Building CPUfreq..."
-  cd cpufreq && apptainer build cpufreq.sif cpufreq.def > /dev/null && cd ..
+  cd ${CPUFREQ_HOME} && apptainer build cpufreq.sif cpufreq.def > /dev/null
   echo "Building RAPL..."
-  cd rapl && apptainer build rapl.sif rapl.def > /dev/null && cd ..
+  cd ${RAPL_HOME} && apptainer build rapl.sif rapl.def > /dev/null
+  cd ${GLOBAL_HOME}
 fi
-cd ..
 
 
 # Set stress tool
-cd stress-system
-chmod +x run.sh
+chmod +x ${STRESS_HOME}/run.sh
 echo "Building stress-system..."
 if [ "$OS_VIRT" == "docker" ]; then
-  docker build -t stress-system -f container/Dockerfile .
+  docker build -t stress-system -f ${STRESS_CONTAINER_DIR}/Dockerfile .
 else
-  cd container && apptainer build stress.sif stress.def > /dev/null && cd ..
+  cd ${STRESS_CONTAINER_DIR} && apptainer build stress.sif stress.def > /dev/null
+  cd ${GLOBAL_HOME}
 fi
-cd ..
 
 if [ "$WORKLOAD" == "npb" ]; then
-	if [ ! -d "NPB3.4.2" ]; then
+	if [ ! -d ${NPB_HOME} ]; then
 		echo "Downloading NPB kernels..."
 		wget https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz
-		tar -xf NPB3.4.2.tar.gz
+		tar -xf NPB3.4.2.tar.gz -C ${BIN_DIR}
 		rm NPB3.4.2.tar.gz
-		cd NPB3.4.2/NPB3.4-OMP
+		cd ${NPB_HOME}
 		cp config/make.def.template config/make.def
 		make is CLASS=C
 		make ft CLASS=C
 		make mg CLASS=C
 		make cg CLASS=C
 		make bt CLASS=C
-		cd ../..
+		cd ${GLOBAL_HOME}
 	else
 		echo "NPB kernels were already downloaded"
 	fi
@@ -54,7 +52,7 @@ elif [ "$WORKLOAD" == "geekbench" ]; then
 	if [ ! -d "Geekbench-${GEEKBENCH_VERSION}-Linux" ]; then
 		echo "Downloading Geekbench..."
 		wget https://cdn.geekbench.com/Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
-		tar -xf Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
+		tar -xf Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz -C ${BIN_DIR}
 		rm Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
 	else
 		echo "Geekbench was already downloaded"

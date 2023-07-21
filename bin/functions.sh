@@ -33,7 +33,7 @@ function stress_cpu() {
 		docker run --name stress-system -it stress-system -l $LOAD -c $CORES -t 2m >> $LOG_FILE 2>&1
 		docker rm stress-system > /dev/null
 	else
-		apptainer run ${STRESS_HOME}/stress.sif -l $LOAD -c $CORES -t 2m >> $LOG_FILE 2>&1
+		apptainer run ${STRESS_CONTAINER_DIR}/stress.sif -l $LOAD -c $CORES -t 2m >> $LOG_FILE 2>&1
 	fi
 	print_timestamp "STRESS-TEST (CORES = $CORES) STOP"
 	sleep 15

@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Tools
-export BIN_DIR=`dirname $0`/bin
-export GLANCES_HOME=cpu_power_monitor/glances
-export CPUFREQ_HOME=cpu_power_monitor/cpufreq
-export RAPL_HOME=cpu_power_monitor/rapl
-export STRESS_HOME=stress-system/container
-export NPB_HOME=${BIN_DIR}/NPB3.4.2/NPB3.4-OMP
-export GEEKBENCH_HOME=${BIN_DIR}/Geekbench-${GEEKBENCH_VERSION}-Linux
+
 
 # Logs
 export LOG_DIR=${BIN_DIR}/../${OUTPUT_DIR}
