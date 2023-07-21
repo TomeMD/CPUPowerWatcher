@@ -30,10 +30,10 @@ export -f get_cores
 function stress_cpu() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
 	if [ "$OS_VIRT" == "docker" ]; then
-		docker run --name stress-system -it stress-system -l $LOAD -c $CORES -t 2m >> $LOG_FILE 2>&1
+		docker run --name stress-system -it stress-system -l $LOAD -s $STRESSORS --cpu-load-types $LOAD_TYPES -c $CORES -t 2m >> $LOG_FILE 2>&1
 		docker rm stress-system > /dev/null
 	else
-		apptainer run ${STRESS_CONTAINER_DIR}/stress.sif -l $LOAD -c $CORES -t 2m >> $LOG_FILE 2>&1
+		apptainer run ${STRESS_CONTAINER_DIR}/stress.sif -l $LOAD -s $STRESSORS --cpu-load-types $LOAD_TYPES -c $CORES -t 2m >> $LOG_FILE 2>&1
 	fi
 	print_timestamp "STRESS-TEST (CORES = $CORES) STOP"
 	sleep 15
@@ -89,7 +89,7 @@ export -f run_npb_kernel
 # <INCREMENT>: Increment of the number of the first core of each pair between iterations. This 
 # INCREMENT is applied independently to the pairs of each CPU. Examples:
 #     cores=(0 1 2 3 4 5 6 7) INCREMENT=2
-#     cores=(0 16 8 24 1 17 9 25) INCREMENT=1
+#     cores=(0 16 1 17 2 18 3 19) INCREMENT=1
 #
 # <CPU_SWITCH>: Frequency in iterations to switch between CPUs. Set 0 to avoid switching 
 # between CPUs.

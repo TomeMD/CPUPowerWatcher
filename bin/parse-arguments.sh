@@ -4,12 +4,18 @@ function usage {
   cat << EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Options:
+OS-LEVEL VIRTUALIZATION:
   -d, --docker             Use Docker for OS-level virtualization. [Default]
   -a, --apptainer          Use Apptainer for OS-level virtualization.
+
+WORKLOAD:
   -s, -stress-system       Run stress tests using stress-system tool. [Default]
+      --stressors              Comma-separated list of stressors to run with stress-system. [Default: cpu]
+      --stress-load-types      Comma-separated list of types of load to stress the CPU. Used together with CPU stressor. [Default: all]
   -n, --npb                Run NPB kenerls.
   -g, --geekbench          Run Geekbench kenerls.
+
+GLOBAL OPTIONS:
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -h, --help               Show this help and exit
 EOF
@@ -33,6 +39,14 @@ while [[ $# -gt 0 ]]; do
     -s|--stress-tests)
       WORKLOAD="stress-system"
       shift 1
+      ;;
+    --stressors)
+      STRESSORS="$2"
+      shift 2
+      ;;
+    --stress-load-types)
+      LOAD_TYPES="$2"
+      shift 2
       ;;
     -n|--npb)
       WORKLOAD="npb"
