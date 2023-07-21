@@ -1,6 +1,6 @@
-# Stress-test-scripts
+# TSG_StressCPU
 
-Set of scripts to automate CPU utilization, frequency and energy consumption monitoring while running stress tests. Options:
+Set of scripts to automate CPU monitoring and time series storage while running stress tests. Options:
 
 ````shell
 ~$ ./run.sh --help
