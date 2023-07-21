@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set monitoring environment
-sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' glances/etc/glances.conf
-sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' rapl/src/rapl_plot/rapl_plot.c
+sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' ${GLANCES_HOME}/etc/glances.conf
+sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' ${RAPL_HOME}/src/rapl_plot/rapl_plot.c
 if [ "$OS_VIRT" == "docker" ]; then
   echo "Building Glances..."
   docker build -t glances ${GLANCES_HOME}
@@ -12,11 +12,11 @@ if [ "$OS_VIRT" == "docker" ]; then
   docker build -t rapl ${RAPL_HOME}
 else
   echo "Building Glances..."
-  cd ${GLANCES_HOME} && apptainer build glances.sif glances.def > /dev/null
+  cd ${GLANCES_HOME} && apptainer build -F glances.sif glances.def > /dev/null
   echo "Building CPUfreq..."
-  cd ${CPUFREQ_HOME} && apptainer build cpufreq.sif cpufreq.def > /dev/null
+  cd ${CPUFREQ_HOME} && apptainer build -F cpufreq.sif cpufreq.def > /dev/null
   echo "Building RAPL..."
-  cd ${RAPL_HOME} && apptainer build rapl.sif rapl.def > /dev/null
+  cd ${RAPL_HOME} && apptainer build -F rapl.sif rapl.def > /dev/null
   cd ${GLOBAL_HOME}
 fi
 

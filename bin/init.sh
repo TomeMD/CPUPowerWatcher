@@ -1,12 +1,8 @@
 #!/bin/bash
 
-# Tools
-
-
 # Logs
-export LOG_DIR=${BIN_DIR}/../${OUTPUT_DIR}
-export LOG_FILE=${LOG_DIR}/stress-system.log
-export TIMESTAMPS_FILE=${LOG_DIR}/stress.timestamps
+export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
+export TIMESTAMPS_FILE=${LOG_DIR}/default.timestamps
 
 mkdir -p $LOG_DIR
 
