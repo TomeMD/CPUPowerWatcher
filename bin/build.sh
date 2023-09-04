@@ -20,18 +20,20 @@ else
   cd ${GLOBAL_HOME}
 fi
 
+if [ "$WORKLOAD" == "stress-system" ]; then
 
-# Set stress tool
-chmod +x ${STRESS_HOME}/run.sh
-echo "Building stress-system..."
-if [ "$OS_VIRT" == "docker" ]; then
-  docker build -t stress-system -f ${STRESS_CONTAINER_DIR}/Dockerfile .
-else
-  cd ${STRESS_CONTAINER_DIR} && apptainer build stress.sif stress.def > /dev/null
-  cd ${GLOBAL_HOME}
-fi
+	# Set stress tool
+	chmod +x ${STRESS_HOME}/run.sh
+	echo "Building stress-system..."
+	if [ "$OS_VIRT" == "docker" ]; then
+	  docker build -t stress-system -f ${STRESS_CONTAINER_DIR}/Dockerfile .
+	else
+	  cd ${STRESS_CONTAINER_DIR} && apptainer build -F stress.sif stress.def > /dev/null
+	  cd ${GLOBAL_HOME}
+	fi
 
-if [ "$WORKLOAD" == "npb" ]; then
+elif [ "$WORKLOAD" == "npb" ]; then
+
 	if [ ! -d ${NPB_HOME} ]; then
 		echo "Downloading NPB kernels..."
 		wget https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz
@@ -39,6 +41,7 @@ if [ "$WORKLOAD" == "npb" ]; then
 		rm NPB3.4.2.tar.gz
 		cd ${NPB_HOME}
 		cp config/make.def.template config/make.def
+		make clean
 		make is CLASS=C
 		make ft CLASS=C
 		make mg CLASS=C
@@ -48,7 +51,9 @@ if [ "$WORKLOAD" == "npb" ]; then
 	else
 		echo "NPB kernels were already downloaded"
 	fi
+
 elif [ "$WORKLOAD" == "geekbench" ]; then
+
 	if [ ! -d "Geekbench-${GEEKBENCH_VERSION}-Linux" ]; then
 		echo "Downloading Geekbench..."
 		wget https://cdn.geekbench.com/Geekbench-${GEEKBENCH_VERSION}-Linux.tar.gz
@@ -57,4 +62,5 @@ elif [ "$WORKLOAD" == "geekbench" ]; then
 	else
 		echo "Geekbench was already downloaded"
 	fi
+	
 fi
