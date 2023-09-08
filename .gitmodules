@@ -1,0 +1,3 @@
+[submodule "cpu_power_monitor"]
+	path = cpu_power_monitor
+	url = git@github.com:TomeMD/cpu_power_monitor.git
