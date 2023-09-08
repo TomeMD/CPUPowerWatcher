@@ -11,7 +11,7 @@ export LOG_DIR=${GLOBAL_HOME}/log/
 export GLANCES_HOME=${GLOBAL_HOME}/cpu_power_monitor/glances
 export CPUFREQ_HOME=${GLOBAL_HOME}/cpu_power_monitor/cpufreq
 export RAPL_HOME=${GLOBAL_HOME}/cpu_power_monitor/rapl
-export STRESS_HOME=${GLOBAL_HOME}/stress_system
+export STRESS_HOME=${GLOBAL_HOME}/stress-system
 export BIN_DIR=${GLOBAL_HOME}/bin
 
 export STRESS_CONTAINER_DIR=${STRESS_HOME}/container
