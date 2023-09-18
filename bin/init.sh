@@ -13,7 +13,7 @@ if [ "$OS_VIRT" == "docker" ]; then
 	docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl
 else
 	sudo apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" ${GLANCES_HOME}/glances.sif glances
-	sudo apptainer instance start ${CPUFREQ_HOME}/cpufreq.sif cpufreq
+	${CPUFREQ_HOME}/get-freq.sh & > /dev/null 2>&1
 	sudo apptainer instance start ${RAPL_HOME}/rapl.sif rapl
 fi
 
