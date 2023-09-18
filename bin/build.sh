@@ -6,15 +6,11 @@ sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' ${RAPL_HOME}/src/ra
 if [ "$OS_VIRT" == "docker" ]; then
   echo "Building Glances..."
   docker build -t glances ${GLANCES_HOME}
-  echo "Building CPUfreq..."
-  docker build -t cpufreq ${CPUFREQ_HOME}
   echo "Building RAPL..."
   docker build -t rapl ${RAPL_HOME}
 else
   echo "Building Glances..."
   cd ${GLANCES_HOME} && apptainer build -F glances.sif glances.def > /dev/null
-  echo "Building CPUfreq..."
-  cd ${CPUFREQ_HOME} && apptainer build -F cpufreq.sif cpufreq.def > /dev/null
   echo "Building RAPL..."
   cd ${RAPL_HOME} && apptainer build -F rapl.sif rapl.def > /dev/null
   cd ${GLOBAL_HOME}
