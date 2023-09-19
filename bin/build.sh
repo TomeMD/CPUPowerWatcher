@@ -16,6 +16,8 @@ else
   cd ${GLOBAL_HOME}
 fi
 
+chmod +x ${CPUFREQ_HOME}/get-freq.sh
+
 if [ "$WORKLOAD" == "stress-system" ]; then
 
 	# Set stress tool
