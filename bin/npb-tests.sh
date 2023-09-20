@@ -6,7 +6,7 @@ TIMESTAMPS_FILE=${LOG_DIR}/NPB.timestamps
 
 CORES_PER_CPU=$(lscpu | grep "Core(s) per socket:" | awk '{print $4}')
 SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')
-export THREADS=$(($CORES_PER_CPU * $SOCKETS * 2))
+export THREADS=$((CORES_PER_CPU * SOCKETS * 2))
 
 START=$(date +%s%N)
 
