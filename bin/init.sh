@@ -14,8 +14,20 @@ else
 	sudo apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" "${GLANCES_HOME}"/glances.sif glances
 	sudo apptainer instance start "${RAPL_HOME}"/rapl.sif rapl
 fi
-"${CPUFREQ_HOME}"/get-freq.sh > /dev/null 2>&1 &
-CPUFREQ_PID=$!
+
+CPUFREQ_STARTED=0
+while [ "${CPUFREQ_STARTED}" -eq 0 ]
+do
+  "${CPUFREQ_HOME}"/get-freq.sh > /dev/null 2>&1 &
+  CPUFREQ_PID=$!
+  sleep 1
+  if ps -p "${CPUFREQ_PID}" > /dev/null; then
+    CPUFREQ_STARTED=1
+    echo "CPUfreq succesfully started"
+  else
+    echo "Error while starting CPUfreq. Trying again."
+  fi
+done
 
 # Load bash functions
 . "${BIN_DIR}"/functions.sh

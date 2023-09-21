@@ -30,8 +30,7 @@ export -f get_cores
 function run_stress-system() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --name stress-system -it stress-system -l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
-		docker rm stress-system > /dev/null
+		docker run --rm --name stress-system -it stress-system -l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
 	else
 		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif -l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
 	fi
@@ -39,7 +38,7 @@ function run_stress-system() {
 	sleep 15
 }
 
-export -f stress_cpu
+export -f run_stress-system
 
 function run_geekbench() {
 	print_timestamp "GEEKBENCH (CORES = $CORES) START"
