@@ -1,15 +1,71 @@
 #!/bin/sh
 
+export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
+
+function get_date {
+    DATE=`date '+%d/%m/%Y %H:%M:%S'`
+}
+
+export -f get_date
+
+function m_echo() {
+    get_date
+    echo -e "\e[48;5;2m[$DATE INFO]\e[0m $@"
+    echo "$DATE > $@" >> "${LOG_FILE}"
+}
+
+export -f m_echo
+
+function m_err() {
+    get_date
+    echo -e "\e[48;5;1m[$DATE ERR ]\e[0m $@" >&2
+    echo "$DATE > $@" >> "${LOG_FILE}"
+}
+
+export -f m_err
+
+function m_warn() {
+    get_date
+    echo -e "\e[48;5;208m[$DATE WARN]\e[0m $@"
+    echo "$DATE > $@" >> "${LOG_FILE}"
+}
+
+export -f m_warn
+
+function show_logo() {
+  echo " _____ ____   ____     ____  _                      ____ ____  _   _ "
+  echo "|_   _/ ___| / ___|   / ___|| |_ _ __ ___  ___ ___ / ___|  _ \| | | |"
+  echo "  | | \___ \| |  _    \___ \| __| '__/ _ \/ __/ __| |   | |_) | | | |"
+  echo "  | |  ___) | |_| |    ___) | |_| | |  __/\__ \__ \ |___|  __/| |_| |"
+  echo "  |_| |____/ \____|___|____/ \__|_|  \___||___/___/\____|_|    \___/ "
+  echo "                 |_____|                                             "
+  echo ""
+}
+
+export -f show_logo
+
+function print_conf() {
+    show_logo
+    m_echo "Writing output to ${LOG_FILE}"
+    m_echo "OS Virtualization Technology = ${OS_VIRT}"
+    m_echo "Workload = ${WORKLOAD}"
+    if [ "${WORKLOAD}" == "stress-system" ]; then
+      m_echo "Stress-system stressors = [${STRESSORS}]"
+      m_echo "CPU Stressor Load Types = [${LOAD_TYPES}]"
+    fi
+}
+
+export -f print_conf
 
 function print_time() {
-	echo "${NAME} CPU TIME: $(bc <<< "scale=9; $(($2 - $1)) / 1000000000")" | tee -a "${LOG_FILE}"
+	m_echo "${NAME} CPU TIME: $(bc <<< "scale=9; $(($2 - $1)) / 1000000000")" #| tee -a "${LOG_FILE}"
 }
 
 export -f print_time
 
 function print_timestamp() {
 	local DESCRIPTION=$1
-	echo "${NAME} ${DESCRIPTION}: $(date -u "+%Y-%m-%d %H:%M:%S%z")" | tee -a "${TIMESTAMPS_FILE}"
+	m_echo "${NAME} ${DESCRIPTION}: $(date -u "+%Y-%m-%d %H:%M:%S%z")" #| tee -a "${TIMESTAMPS_FILE}"
 }
 
 export -f print_timestamp
@@ -49,21 +105,12 @@ function run_geekbench() {
 
 export -f run_geekbench
 
-function idle_cpu() {
-	print_timestamp "IDLE START"
-	sleep 30
-	print_timestamp "IDLE STOP"
-	sleep 5
-}
-
-export -f idle_cpu
-
 function run_npb_kernel() {
 	local COMMAND="while true; do ${NPB_HOME}/${1} | tee -a ${LOG_FILE}; done"
 	NUM_THREADS=1
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-		print_timestamp "NPB START"
+		  print_timestamp "NPB START"
 	    export OMP_NUM_THREADS="${NUM_THREADS}"
 	    timeout 5m bash -c "${COMMAND}"
 	    NUM_THREADS=$(( NUM_THREADS * 2 ))
@@ -72,6 +119,15 @@ function run_npb_kernel() {
 }
 
 export -f run_npb_kernel
+
+function idle_cpu() {
+	print_timestamp "IDLE START"
+	sleep 30
+	print_timestamp "IDLE STOP"
+	sleep 5
+}
+
+export -f idle_cpu
 
 ################################################################################################
 # run_experiment <NAME> <PAIR_OFFSET> <INCREMENT> <CPU_SWITCH> <TOTAL_PAIRS> <TEST_FUNCTION>

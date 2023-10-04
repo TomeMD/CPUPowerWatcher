@@ -1,5 +1,6 @@
 #!/bin/bash
 
+m_echo "Closing environment"
 if [ "$OS_VIRT" == "docker" ]; then
 	docker stop rapl glances
 	docker rm rapl glances
@@ -14,3 +15,4 @@ if ps -p "${CPUFREQ_PID}" > /dev/null; then
 else
    echo "CPUfreq process succesfully stopped"
 fi
+m_echo "Environment succesfully stoped"
