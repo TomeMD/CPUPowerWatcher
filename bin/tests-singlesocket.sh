@@ -6,7 +6,7 @@ PAIRS_OF_CORES="${PHY_CORES_PER_CPU}" # With logical cores total pairs of cores 
 # Start tests
 START=$(date +%s%N)
 
-sleep 30 # Initial wait
+#sleep 30 # Initial wait
 
 #run_experiment <NAME> <TOTAL_PAIRS> <PAIR_OFFSET> <INCREMENT> <CPU_SWITCH> <TEST_FUNCTION>
 ################################################################################################

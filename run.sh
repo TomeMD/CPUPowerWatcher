@@ -10,7 +10,7 @@ export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
 
 # Build environment
 . "${BIN_DIR}"/build.sh
-#. "${BIN_DIR}"/init.sh
+. "${BIN_DIR}"/init.sh
 
 # Run workload
 . "${BIN_DIR}"/run-workload.sh

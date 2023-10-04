@@ -58,14 +58,15 @@ function print_conf() {
 export -f print_conf
 
 function print_time() {
-	m_echo "${NAME} CPU TIME: $(bc <<< "scale=9; $(($2 - $1)) / 1000000000")" #| tee -a "${LOG_FILE}"
+	m_echo "${NAME} CPU TIME: $(bc <<< "scale=9; $(($2 - $1)) / 1000000000")" | tee -a "${LOG_FILE}"
 }
 
 export -f print_time
 
 function print_timestamp() {
 	local DESCRIPTION=$1
-	m_echo "${NAME} ${DESCRIPTION}: $(date -u "+%Y-%m-%d %H:%M:%S%z")" #| tee -a "${TIMESTAMPS_FILE}"
+	m_echo "${NAME} ${DESCRIPTION}: $(date -u "+%Y-%m-%d %H:%M:%S%z")"
+	echo "${NAME} ${DESCRIPTION}: $(date -u "+%Y-%m-%d %H:%M:%S%z")" >> "${TIMESTAMPS_FILE}"
 }
 
 export -f print_timestamp

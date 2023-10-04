@@ -54,3 +54,4 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+mkdir -p "${LOG_DIR}"

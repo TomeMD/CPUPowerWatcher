@@ -4,9 +4,6 @@ print_conf
 
 m_echo "Building monitoring environment"
 
-# Create log dir if it doesn't exists
-mkdir -p "${LOG_DIR}"
-
 # Set InfluxDB Server
 sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' "${GLANCES_HOME}"/etc/glances.conf
 sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' "${RAPL_HOME}"/src/rapl_plot/rapl_plot.c
