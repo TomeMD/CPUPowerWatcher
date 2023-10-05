@@ -114,7 +114,7 @@ function start_cpufreq_core() {
 	done
 }
 
-export -f start_cpufreq
+export -f start_cpufreq_core
 
 function stop_cpufreq_core() {
   kill "${CORE_CPUFREQ_PID}"
@@ -126,7 +126,7 @@ function stop_cpufreq_core() {
   fi
 }
 
-export -f stop_cpufreq
+export -f stop_cpufreq_core
 
 function run_stress-system() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
