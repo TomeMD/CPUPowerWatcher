@@ -11,8 +11,8 @@ fi
 kill "${CPUFREQ_PID}"
 
 if ps -p "${CPUFREQ_PID}" > /dev/null; then
-   echo "Error while killing CPUfreq process"
+   m_err "Error while killing CPUfreq process"
 else
-   echo "CPUfreq process succesfully stopped"
+   m_echo "CPUfreq process succesfully stopped"
 fi
 m_echo "Environment succesfully stoped"

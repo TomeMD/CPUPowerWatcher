@@ -17,8 +17,8 @@ do
   sleep 1
   if ps -p "${CPUFREQ_PID}" > /dev/null; then
     CPUFREQ_STARTED=1
-    echo "CPUfreq succesfully started"
+    m_echo "CPUfreq succesfully started"
   else
-    echo "Error while starting CPUfreq. Trying again."
+    m_err "Error while starting CPUfreq. Trying again."
   fi
 done

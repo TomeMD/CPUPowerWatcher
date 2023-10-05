@@ -71,7 +71,20 @@ function print_timestamp() {
 
 export -f print_timestamp
 
-function get_cores() {
+function set_sequential_cores() {
+  MAX=$1
+  CORES=""
+  for (( i=0; i<MAX; i++ )); do
+      if [ "$i" -ne 0 ]; then
+        CORES+=","
+    fi
+    CORES+="$i"
+  done
+}
+
+export -f set_sequential_cores
+
+function set_cores() {
 	CORE_0="${CPUS_FIRST_CORE[$((CPU % 2))]}"
 	CORE_1=$((CORE_0 + PAIR_OFFSET))
 	if [ -z "${CORES}" ]; then
@@ -82,7 +95,38 @@ function get_cores() {
 	CPUS_FIRST_CORE[$((CPU % 2))]=$((CORE_0 + INCREMENT))
 }
 
-export -f get_cores
+export -f set_cores
+
+function start_cpufreq_core() {
+	CPUFREQ_STARTED=0
+	while [ "${CPUFREQ_STARTED}" -eq 0 ]
+	do
+		  echo "${CPUFREQ_HOME}/get-freq-core.sh ${CORES}"
+  		"${CPUFREQ_HOME}"/get-freq-core.sh "${CORES}" > /dev/null 2>&1 &
+  		CORE_CPUFREQ_PID=$!
+  		sleep 1
+  		if ps -p "${CORE_CPUFREQ_PID}" > /dev/null; then
+    			CPUFREQ_STARTED=1
+    			m_echo "CPUfreq per core succesfully started"
+  		else
+    			m_err "Error while starting CPUfreq per core. Trying again."
+  		fi
+	done
+}
+
+export -f start_cpufreq
+
+function stop_cpufreq_core() {
+  kill "${CORE_CPUFREQ_PID}"
+
+  if ps -p "${CORE_CPUFREQ_PID}" > /dev/null; then
+     m_err "Error while killing CPUfreq per core process"
+  else
+     m_echo "CPUfreq per core process succesfully stopped"
+  fi
+}
+
+export -f stop_cpufreq
 
 function run_stress-system() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
@@ -111,11 +155,14 @@ function run_npb_kernel() {
 	NUM_THREADS=1
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-		  print_timestamp "NPB START"
+      set_sequential_cores ${NUM_THREADS}
+	    start_cpufreq_core
+	    print_timestamp "NPB START"
 	    export OMP_NUM_THREADS="${NUM_THREADS}"
-	    timeout 5m bash -c "${COMMAND}"
+	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
 	    NUM_THREADS=$(( NUM_THREADS * 2 ))
 	    print_timestamp "NPB STOP"
+	    stop_cpufreq_core
 	done
 }
 
@@ -169,14 +216,16 @@ function run_experiment() {
 	local PAIRS_COUNT=0
 	local START_TEST=$(date +%s%N)
 	while [ "${PAIRS_COUNT}" -lt "${TOTAL_PAIRS}" ]; do
-	    get_cores
+	    set_cores
+	    start_cpufreq_core
 	    "$TEST_FUNCTION"
 	    idle_cpu
+	    stop_cpufreq_core
 	    LOAD=$((LOAD + 200))
 	    PAIRS_COUNT=$((PAIRS_COUNT + 1))
 		if [ "${CPU_SWITCH}" -ne 0 ] && [ $((PAIRS_COUNT % CPU_SWITCH)) -eq 0 ]; then
 			CPU=$((CPU + 1))
-		fi  
+		fi
 	done
 	local END_TEST=$(date +%s%N)
   print_time "${START_TEST}" "${END_TEST}"
