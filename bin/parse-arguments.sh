@@ -10,6 +10,7 @@ Usage: $(basename "$0") [OPTIONS]
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               geekbench           Run Geekbench kenerls.
+                              spark               Run Apache Spark.
                               stress-system       Run stress tests using stress-system tool. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]

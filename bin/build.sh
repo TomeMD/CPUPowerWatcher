@@ -75,13 +75,37 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 		m_echo "NPB kernels were already downloaded"
 	fi
 elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
-	if [ ! -d "Geekbench-${GEEKBENCH_VERSION}-Linux" ]; then
+	if [ ! -d "${GEEKBENCH_HOME}" ]; then
 		m_echo "Downloading Geekbench..."
 		wget https://cdn.geekbench.com/Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz
 		tar -xf Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz -C "${BIN_DIR}"
 		rm Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz
 	else
 		m_echo "Geekbench was already downloaded"
+	fi
+elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
+	if [ ! -d "${SPARK_HOME}" ]; then
+		m_echo "Downloading Apache Spark..."
+		if [ -z "${JAVA_HOME}" ]; then
+		  m_err "JAVA_HOME is not set"
+		  exit 1
+		fi
+    if [ -z "${PYTHON_HOME}" ]; then
+      m_err "Python 3 is not installed"
+      exit 1
+    fi
+		#sudo apt install default-jdk scala git -y
+		wget https://archive.apache.org/dist/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_HADOOP_VERSION}".tgz
+		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz -C "${BIN_DIR}"
+		rm spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz
+		echo "export SPARK_HOME=${SPARK_HOME}" >> ~/.bashrc
+		echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bashrc
+    echo "export PATH=${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin" >> ~/.bashrc
+    echo "export PYSPARK_PYTHON=${PYTHON_HOME}" >> ~/.bashrc
+    source ~/.bashrc
+    mkdir -P "${SPARK_HOME}"/out "${SPARK_HOME}"/sorted_out
+	else
+		m_echo "Apache Spark was already downloaded"
 	fi
 fi
 

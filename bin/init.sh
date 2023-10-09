@@ -22,3 +22,8 @@ do
     m_err "Error while starting CPUfreq. Trying again."
   fi
 done
+
+if [ "${WORKLOAD}" == "spark" ]; then
+  m_echo "Start Spark Master node"
+  "${SPARK_HOME}"/sbin/start-master.sh
+fi

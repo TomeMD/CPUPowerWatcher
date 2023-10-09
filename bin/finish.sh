@@ -16,3 +16,8 @@ else
    m_echo "CPUfreq process succesfully stopped"
 fi
 m_echo "Environment succesfully stoped"
+
+if [ "${WORKLOAD}" == "spark" ]; then
+  m_echo "Stop Spark Master node"
+  "${SPARK_HOME}"/sbin/stop-master.sh
+fi

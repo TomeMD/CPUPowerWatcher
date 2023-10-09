@@ -101,7 +101,6 @@ function start_cpufreq_core() {
 	CPUFREQ_STARTED=0
 	while [ "${CPUFREQ_STARTED}" -eq 0 ]
 	do
-		  echo "${CPUFREQ_HOME}/get-freq-core.sh ${CORES}"
   		"${CPUFREQ_HOME}"/get-freq-core.sh "${CORES}" > /dev/null 2>&1 &
   		CORE_CPUFREQ_PID=$!
   		sleep 1
@@ -167,6 +166,27 @@ function run_npb_kernel() {
 }
 
 export -f run_npb_kernel
+
+function run_spark() {
+  local CORE_ARRAY=()
+  IFS=',' read -ra CORE_ARRAY <<< "$CORES"
+  export SPARK_WORKER_INSTANCES="${#CORE_ARRAY[@]}"
+  print_timestamp "SPARK (CORES = $CORES) START"
+
+  taskset -c "${CORES}" "${SPARK_HOME}"/sbin/start-worker.sh -c 1 "${SPARK_MASTER_URL}"
+
+  "${SPARK_HOME}"/bin/spark-submit --class org.apache.spark.examples.SparkPi \
+    --master "${SPARK_MASTER_URL}" --deploy-mode client \
+    --conf "spark.driver.extraJavaOptions=--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" \
+    --conf "spark.executor.extraJavaOptions=--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" \
+    "${SPARK_EXAMPLES_JAR}" 1000
+
+  print_timestamp "SPARK (CORES = $CORES) STOP"
+  "${SPARK_HOME}"/sbin/stop-worker.sh
+  sleep 10
+}
+
+export -f run_spark
 
 function idle_cpu() {
 	print_timestamp "IDLE START"

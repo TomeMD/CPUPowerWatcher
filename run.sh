@@ -3,8 +3,8 @@
 export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
 
 # Get initial configuration
+. "${GLOBAL_HOME}"/etc/default-conf.sh
 . "${GLOBAL_HOME}"/bin/get-env.sh
-. "${CONF_DIR}"/default-conf.sh
 . "${BIN_DIR}"/parse-arguments.sh
 . "${BIN_DIR}"/functions.sh
 
