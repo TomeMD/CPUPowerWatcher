@@ -103,7 +103,6 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
     echo "export PATH=${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin" >> ~/.bashrc
     echo "export PYSPARK_PYTHON=${PYTHON_HOME}" >> ~/.bashrc
     source ~/.bashrc
-    mkdir -P "${SPARK_HOME}"/out "${SPARK_HOME}"/sorted_out
 	else
 		m_echo "Apache Spark was already downloaded"
 	fi

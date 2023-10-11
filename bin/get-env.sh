@@ -13,7 +13,8 @@ export NPB_HOME="${BIN_DIR}"/NPB3.4.2/NPB3.4-OMP
 export GEEKBENCH_HOME="${BIN_DIR}"/Geekbench-"${GEEKBENCH_VERSION}"-Linux
 export SPARK_HOME="${BIN_DIR}"/spark-${SPARK_VERSION}-bin-hadoop"${SPARK_HADOOP_VERSION}"
 export SPARK_EXAMPLES_JAR="${SPARK_HOME}"/examples/jars/spark-examples_2.12-3.2.0.jar
-export SPARK_MASTER_URL=spark://localhost:7077
+export SPARK_MASTER_HOST=localhost
+export SPARK_MASTER_URL=spark://"${SPARK_MASTER_HOST}":7077
 export PYTHON_HOME=$(which python3)
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 

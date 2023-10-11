@@ -191,8 +191,8 @@ function run_spark() {
 
   "${SPARK_HOME}"/bin/spark-submit --class org.apache.spark.examples.SparkPi \
     --master "${SPARK_MASTER_URL}" --deploy-mode client \
-    --conf "spark.driver.extraJavaOptions=--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" \
-    --conf "spark.executor.extraJavaOptions=--add-exports=java.base/sun.nio.ch=ALL-UNNAMED" \
+    --conf "spark.driver.extraJavaOptions=${JAVA_EXPORTS}" \
+    --conf "spark.executor.extraJavaOptions=${JAVA_EXPORTS}" \
     "${SPARK_EXAMPLES_JAR}" 1000
 
   print_timestamp "SPARK (CORES = $CORES) STOP"
