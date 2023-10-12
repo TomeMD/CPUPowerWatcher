@@ -8,16 +8,9 @@ else
 	sudo apptainer instance stop rapl && sudo apptainer instance stop glances
 fi
 
-kill "${CPUFREQ_PID}"
-
-if ps -p "${CPUFREQ_PID}" > /dev/null; then
-   m_err "Error while killing CPUfreq process"
-else
-   m_echo "CPUfreq process succesfully stopped"
-fi
-m_echo "Environment succesfully stoped"
-
 if [ "${WORKLOAD}" == "spark" ]; then
   m_echo "Stop Spark Master node"
   "${SPARK_HOME}"/sbin/stop-master.sh
 fi
+
+m_echo "Environment succesfully closed"

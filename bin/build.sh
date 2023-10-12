@@ -5,8 +5,8 @@ print_conf
 m_echo "Building monitoring environment"
 
 # Set InfluxDB Server
-sed -i '/\[influxdb2\]/,/\[/{s/^host=localhost$/host=montoxo.des.udc.es/}' "${GLANCES_HOME}"/etc/glances.conf
-sed -i '/ic_influx_database/s/localhost/montoxo.des.udc.es/' "${RAPL_HOME}"/src/rapl_plot/rapl_plot.c
+sed -i "/\[influxdb2\]/,/\[/{s/^host=localhost$/host=${INFLUXDB_HOST}/}" "${GLANCES_HOME}"/etc/glances.conf
+sed -i "/ic_influx_database/s/localhost/${INFLUXDB_HOST}/" "${RAPL_HOME}"/src/rapl_plot/rapl_plot.c
 
 # Build monitoring environment
 if [ "${OS_VIRT}" == "docker" ]; then
@@ -22,7 +22,7 @@ if [ "${OS_VIRT}" == "docker" ]; then
   else
     m_echo "RAPL image already exists. Skipping build."
   fi
-else
+elif [ "${OS_VIRT}" == "apptainer" ]; then
   if [ ! -f "${GLANCES_HOME}"/glances.sif ]; then
     m_echo "Building Glances..."
     cd "${GLANCES_HOME}" && apptainer build -F glances.sif glances.def
@@ -38,25 +38,27 @@ else
 fi
 
 cd "${GLOBAL_HOME}"
-chmod +x "${CPUFREQ_HOME}"/get-freq.sh
+chmod +x "${CPUFREQ_HOME}"/get-freq-core.sh
 
 # Compile workloads
 if [ "${WORKLOAD}" == "stress-system" ]; then # STRESS-SYSTEM
-  if [ -z "$(docker image ls -q stress-system)" ]; then
-    if ! command -v stress-ng &> /dev/null; then
-      m_err "Stress-ng is not installed. Install this tool to use stress-system workload."
-      exit 1
-    fi
-    chmod +x "${STRESS_HOME}"/run.sh
-    m_echo "Building stress-system..."
-    if [ "$OS_VIRT" == "docker" ]; then
+  chmod +x "${STRESS_HOME}"/run.sh
+  if [ "$OS_VIRT" == "docker" ]; then
+    if [ -z "$(docker image ls -q stress-system)" ]; then
+      m_echo "Building stress-system..."
       cd "${STRESS_HOME}" && docker build -t stress-system -f "${STRESS_CONTAINER_DIR}"/Dockerfile .
     else
-      cd "${STRESS_CONTAINER_DIR}" && apptainer build -F stress.sif stress.def > /dev/null
+      m_echo "Stress-system image already exists. Skipping build."
     fi
-  else
-    m_echo "Stress-system image already exists. Skipping build."
+  elif [ "${OS_VIRT}" == "apptainer" ]; then
+    if [ ! -f "${STRESS_CONTAINER_DIR}"/stress.sif ]; then
+      m_echo "Building stress-system..."
+      cd "${STRESS_CONTAINER_DIR}" && apptainer build -F stress.sif stress.def > /dev/null
+    else
+      m_echo "Stress-system image already exists. Skipping build."
+    fi
   fi
+
 elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 	if [ ! -d "${NPB_HOME}" ]; then
 		m_echo "Downloading NPB kernels..."
@@ -74,6 +76,7 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 	else
 		m_echo "NPB kernels were already downloaded"
 	fi
+
 elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 	if [ ! -d "${GEEKBENCH_HOME}" ]; then
 		m_echo "Downloading Geekbench..."
@@ -83,6 +86,7 @@ elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 	else
 		m_echo "Geekbench was already downloaded"
 	fi
+
 elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 	if [ ! -d "${SPARK_HOME}" ]; then
 		m_echo "Downloading Apache Spark..."

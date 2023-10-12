@@ -9,20 +9,6 @@ else
 	sudo apptainer instance start "${RAPL_HOME}"/rapl.sif rapl
 fi
 
-CPUFREQ_STARTED=0
-while [ "${CPUFREQ_STARTED}" -eq 0 ]
-do
-  "${CPUFREQ_HOME}"/get-freq.sh > /dev/null 2>&1 &
-  CPUFREQ_PID=$!
-  sleep 1
-  if ps -p "${CPUFREQ_PID}" > /dev/null; then
-    CPUFREQ_STARTED=1
-    m_echo "CPUfreq succesfully started"
-  else
-    m_err "Error while starting CPUfreq. Trying again."
-  fi
-done
-
 if [ "${WORKLOAD}" == "spark" ]; then
   m_echo "Start Spark Master node"
   "${SPARK_HOME}"/sbin/start-master.sh
