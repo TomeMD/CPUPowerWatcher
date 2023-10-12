@@ -63,7 +63,7 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 	if [ ! -d "${NPB_HOME}" ]; then
 		m_echo "Downloading NPB kernels..."
 		wget https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz
-		tar -xf NPB3.4.2.tar.gz -C "${BIN_DIR}"
+		tar -xf NPB3.4.2.tar.gz -C "${TOOLS_DIR}"
 		rm NPB3.4.2.tar.gz
 		cd "${NPB_HOME}"
 		cp config/make.def.template config/make.def
@@ -81,7 +81,7 @@ elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 	if [ ! -d "${GEEKBENCH_HOME}" ]; then
 		m_echo "Downloading Geekbench..."
 		wget https://cdn.geekbench.com/Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz
-		tar -xf Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz -C "${BIN_DIR}"
+		tar -xf Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz -C "${TOOLS_DIR}"
 		rm Geekbench-"${GEEKBENCH_VERSION}"-Linux.tar.gz
 	else
 		m_echo "Geekbench was already downloaded"
@@ -100,7 +100,7 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
     fi
 		#sudo apt install default-jdk scala git -y
 		wget https://archive.apache.org/dist/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_HADOOP_VERSION}".tgz
-		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz -C "${BIN_DIR}"
+		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz -C "${TOOLS_DIR}"
 		rm spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz
 		echo "export SPARK_HOME=${SPARK_HOME}" >> ~/.bashrc
 		echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bashrc

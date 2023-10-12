@@ -1,0 +1,18 @@
+Bootstrap: docker
+From: influxdb:latest
+
+%post
+  apt-get update && \
+  apt-get install -y python3-pip && \
+  pip3 install influxdb-client
+
+%files
+  entrypoint.sh /entrypoint.sh
+
+%startscript
+  /entrypoint.sh
+  influxd
+
+%runscript
+  /entrypoint.sh
+  influxd 
