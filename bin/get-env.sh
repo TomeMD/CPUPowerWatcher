@@ -10,6 +10,7 @@ export CPUFREQ_HOME="${TOOLS_DIR}"/cpu_power_monitor/cpufreq
 export RAPL_HOME="${TOOLS_DIR}"/cpu_power_monitor/rapl
 export STRESS_HOME="${TOOLS_DIR}"/stress-system
 export STRESS_CONTAINER_DIR="${STRESS_HOME}"/container
+export SYSBENCH_HOME="${TOOLS_DIR}"/sysbench
 export NPB_HOME="${TOOLS_DIR}"/NPB3.4.2/NPB3.4-OMP
 export GEEKBENCH_HOME="${TOOLS_DIR}"/Geekbench-"${GEEKBENCH_VERSION}"-Linux
 export SPARK_HOME="${TOOLS_DIR}"/spark-${SPARK_VERSION}-bin-hadoop"${SPARK_HADOOP_VERSION}"

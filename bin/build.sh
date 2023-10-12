@@ -77,6 +77,23 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 		m_echo "NPB kernels were already downloaded"
 	fi
 
+elif [ "${WORKLOAD}" == "sysbench" ]; then # SYSBENCH
+  if [ "$OS_VIRT" == "docker" ]; then
+    if [ -z "$(docker image ls -q sysbench)" ]; then
+      m_echo "Building sysbench..."
+      cd "${SYSBENCH_HOME}" && docker build -t sysbench .
+    else
+      m_echo "Sysbench image already exists. Skipping build."
+    fi
+  elif [ "${OS_VIRT}" == "apptainer" ]; then
+    if [ ! -f "${SYSBENCH_HOME}"/sysbench.sif ]; then
+      m_echo "Building sysbench..."
+      cd "${SYSBENCH_HOME}" && apptainer build -F sysbench.sif sysbench.def > /dev/null
+    else
+      m_echo "Sysbench image already exists. Skipping build."
+    fi
+  fi
+
 elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 	if [ ! -d "${GEEKBENCH_HOME}" ]; then
 		m_echo "Downloading Geekbench..."

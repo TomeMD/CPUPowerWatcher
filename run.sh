@@ -4,8 +4,8 @@ export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
 
 # Get initial configuration
 . "${GLOBAL_HOME}"/etc/default-conf.sh
+. "${GLOBAL_HOME}"/bin/parse-arguments.sh
 . "${GLOBAL_HOME}"/bin/get-env.sh
-. "${BIN_DIR}"/parse-arguments.sh
 . "${BIN_DIR}"/functions.sh
 
 # Build environment

@@ -154,6 +154,19 @@ function run_stress-system() {
 
 export -f run_stress-system
 
+function run_sysbench() {
+	print_timestamp "SYSBENCH (CORES = $CORES) START"
+	if [ "${OS_VIRT}" == "docker" ]; then
+		docker run --rm --name sysbench -it sysbench "${CORES}" >> "${LOG_FILE}" 2>&1
+	else
+		apptainer run "${SYSBENCH_HOME}"/sysbench.sif "${CORES}" >> "${LOG_FILE}" 2>&1
+	fi
+	print_timestamp "SYSBENCH (CORES = $CORES) STOP"
+	sleep 15
+}
+
+export -f run_sysbench
+
 function run_geekbench() {
 	print_timestamp "GEEKBENCH (CORES = $CORES) START"
 	taskset -c "${CORES}" "${GEEKBENCH_HOME}"/geekbench_x86_64 | tee -a "${LOG_FILE}"
