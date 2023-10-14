@@ -17,6 +17,8 @@ Usage: $(basename "$0") [OPTIONS]
                                                          [Default: cpu]
                                 --stress-load-types      Comma-separated list of types of load to stress the CPU.
                                                          Used together with CPU stressor. [Default: all]
+                                --other-options          Comma-separated list of other stress-ng options specified
+                                                         in key=value format.
 
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -h, --help               Show this help and exit
@@ -40,6 +42,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --stress-load-types)
       LOAD_TYPES="$2"
+      shift 2
+      ;;
+    --other-options)
+      OTHER_OPTIONS="--other ${2} "
       shift 2
       ;;
     -o|--output)
