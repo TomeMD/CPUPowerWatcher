@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export LOG_DIR="${GLOBAL_HOME}"/log
 export BIN_DIR="${GLOBAL_HOME}"/bin
 export CONF_DIR="${GLOBAL_HOME}"/etc
 export TOOLS_DIR="${GLOBAL_HOME}"/tools

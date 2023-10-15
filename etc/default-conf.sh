@@ -1,3 +1,4 @@
+export LOG_DIR="${GLOBAL_HOME}"/log
 export OS_VIRT="docker"
 export WORKLOAD="stress-system"
 export STRESSORS="cpu"
