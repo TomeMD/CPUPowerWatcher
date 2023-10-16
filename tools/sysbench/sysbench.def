@@ -5,8 +5,9 @@ From: debian:bullseye-slim
   run-sysbench.sh /usr/local/bin/sysbench/
 
 %post
-  apt-get update && apt-get install -y stress-ng
-  curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh | sudo bash
+  apt-get update && apt-get install -y sudo curl
+  echo 'APT::Sandbox::User "root";' > /etc/apt/apt.conf.d/99no-sandbox
+  curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh | bash
   sudo apt -y install sysbench
   chmod +x /usr/local/bin/sysbench/run-sysbench.sh
 

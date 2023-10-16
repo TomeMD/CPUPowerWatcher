@@ -144,9 +144,9 @@ export -f stop_cpufreq_core
 function run_stress-system() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name stress-system -it stress-system "${OTHER_OPTIONS}"-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
+		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
 	else
-		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif "${OTHER_OPTIONS}"-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
+		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
 	fi
 	print_timestamp "STRESS-TEST (CORES = $CORES) STOP"
 	sleep 15
