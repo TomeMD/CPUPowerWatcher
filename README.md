@@ -9,7 +9,8 @@ Usage: run.sh [OPTIONS]
   -v, --os-virt             Technology for OS-level virtualization. [Default]
                                 docker
                                 apptainer
-
+  -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
+  -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: glances]
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.

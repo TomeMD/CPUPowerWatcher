@@ -6,7 +6,8 @@ Usage: $(basename "$0") [OPTIONS]
   -v, --os-virt             Technology for OS-level virtualization. [Default]
                                 docker
                                 apptainer
-
+  -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
+  -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: glances]
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
@@ -30,6 +31,14 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     -v|--os-virt)
       OS_VIRT="$2"
+      shift 2
+      ;;
+    -i|--influxdb-host)
+      INFLUXDB_HOST="$2"
+      shift 2
+      ;;
+    -b|--influxdb-bucket)
+      INFLUXDB_BUCKET="$2"
       shift 2
       ;;
     -w|--workload)

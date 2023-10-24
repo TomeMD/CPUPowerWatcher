@@ -115,7 +115,7 @@ function start_cpufreq_core() {
 	CPUFREQ_STARTED=0
 	while [ "${CPUFREQ_STARTED}" -eq 0 ]
 	do
-  		"${CPUFREQ_HOME}"/get-freq-core.sh "${CORES}" > /dev/null 2>&1 &
+  		"${CPUFREQ_HOME}"/get-freq-core.sh "${CORES}" "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" > /dev/null 2>&1 &
   		CORE_CPUFREQ_PID=$!
   		sleep 1
   		if ps -p "${CORE_CPUFREQ_PID}" > /dev/null; then

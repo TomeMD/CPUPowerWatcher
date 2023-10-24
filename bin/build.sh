@@ -4,10 +4,6 @@ print_conf
 
 m_echo "Building monitoring environment"
 
-# Set InfluxDB Server
-sed -i "/\[influxdb2\]/,/\[/{s/^host=localhost$/host=${INFLUXDB_HOST}/}" "${GLANCES_HOME}"/etc/glances.conf
-sed -i "/ic_influx_database/s/localhost/${INFLUXDB_HOST}/" "${RAPL_HOME}"/src/rapl_plot/rapl_plot.c
-
 # Build monitoring environment
 if [ "${OS_VIRT}" == "docker" ]; then
   if [ -z "$(docker image ls -q glances)" ]; then
