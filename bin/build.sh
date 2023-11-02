@@ -61,7 +61,7 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 		wget https://www.nas.nasa.gov/assets/npb/NPB3.4.2.tar.gz
 		tar -xf NPB3.4.2.tar.gz -C "${TOOLS_DIR}"
 		rm NPB3.4.2.tar.gz
-		cd "${NPB_HOME}"
+		cd "${NPB_OMP_HOME}"
 		cp config/make.def.template config/make.def
 		make clean
 		make is CLASS=C
@@ -69,6 +69,10 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 		make mg CLASS=C
 		make cg CLASS=C
 		make bt CLASS=C
+		cd "${NPB_MPI_HOME}"
+		cp config/make.def.template config/make.def
+		make clean
+		make bt CLASS=C SUBTYPE=epio # epio means each process writes to a different file
 	else
 		m_echo "NPB kernels were already downloaded"
 	fi

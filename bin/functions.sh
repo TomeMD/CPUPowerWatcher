@@ -176,8 +176,8 @@ function run_geekbench() {
 
 export -f run_geekbench
 
-function run_npb_kernel() {
-	local COMMAND="while true; do ${NPB_HOME}/${1} | tee -a ${LOG_FILE}; done"
+function run_npb_omp_kernel() {
+	local COMMAND="while true; do ${NPB_OMP_HOME}/${1} | tee -a ${LOG_FILE}; done"
 	NUM_THREADS=1
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
@@ -186,13 +186,33 @@ function run_npb_kernel() {
 	    print_timestamp "NPB START"
 	    export OMP_NUM_THREADS="${NUM_THREADS}"
 	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
-	    NUM_THREADS=$(( NUM_THREADS * 2 ))
 	    print_timestamp "NPB STOP"
 	    stop_cpufreq_core
+	    NUM_THREADS=$(( NUM_THREADS * 2 ))
 	done
 }
 
-export -f run_npb_kernel
+export -f run_npb_omp_kernel
+
+function run_npb_mpi_kernel() {
+	local COMMAND=""
+	BASE=1
+	NUM_THREADS=$(( BASE * BASE ))
+	while [ "${NUM_THREADS}" -le "${THREADS}" ]
+	do
+	    COMMAND="while true; do mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
+      set_sequential_cores ${NUM_THREADS}
+	    start_cpufreq_core
+	    print_timestamp "NPB START"
+	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
+	    print_timestamp "NPB STOP"
+	    stop_cpufreq_core
+	    BASE=$(( BASE + 1))
+	    NUM_THREADS=$(( BASE * BASE )) # BT I/O needs an square number of processes
+	done
+}
+
+export -f run_npb_omp_kernel
 
 function run_spark() {
   local CORE_ARRAY=()
