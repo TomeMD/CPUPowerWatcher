@@ -223,7 +223,7 @@ function run_spark() {
   local CORE_ARRAY=()
   IFS=',' read -ra CORE_ARRAY <<< "$CORES"
   print_timestamp "SPARK (CORES = $CORES) START"
-  taskset -c "${CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${DATA_DIR}}/input.fastq" --master local["${#CORE_ARRAY[@]}"] --driver-memory 120g
+  taskset -c "${CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${DATA_DIR}/input.fastq" --master local["${#CORE_ARRAY[@]}"] --driver-memory 120g
   print_timestamp "SPARK (CORES = $CORES) STOP"
   sleep 10
 }

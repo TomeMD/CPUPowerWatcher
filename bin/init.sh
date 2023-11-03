@@ -9,17 +9,12 @@ else
 	sudo apptainer instance start "${RAPL_HOME}"/rapl.sif rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}"
 fi
 
-if [ "${WORKLOAD}" == "spark" ]; then
-  m_echo "Start Spark Master node"
-  "${SPARK_HOME}"/sbin/start-master.sh
-fi
-
 if [ "${RUN_FIO}" -ne 0 ]; then
   FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --numjobs=1"
   if [ "${OS_VIRT}" == "docker" ]; then
     echo "docker run --name fio -d -v ${FIO_TARGET}:/tmp fio ${FIO_OPTIONS}"
     docker run -d --name fio -v "${FIO_TARGET}":/tmp fio ${FIO_OPTIONS}
   else
-    sudo apptainer instance start -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio "${FIO_OPTIONS}"
+    sudo apptainer instance start -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio ${FIO_OPTIONS}
   fi
 fi

@@ -17,9 +17,4 @@ if [ "${RUN_FIO}" -ne 0 ]; then
   fi
 fi
 
-if [ "${WORKLOAD}" == "spark" ]; then
-  m_echo "Stop Spark Master node"
-  "${SPARK_HOME}"/sbin/stop-master.sh
-fi
-
 m_echo "Environment succesfully closed"

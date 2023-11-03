@@ -44,7 +44,7 @@ if [ "${RUN_FIO}" -ne 0 ]; then
     else
       m_echo "Fio image already exists. Skipping build."
     fi
-  else
+  elif [ "${OS_VIRT}" == "apptainer" ]; then
     if [ ! -f "${FIO_HOME}"/fio.sif ]; then
       m_echo "Building fio..."
       cd "${FIO_HOME}" && apptainer build -F fio.sif fio.def
@@ -139,11 +139,11 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 		wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
 		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz -C "${TOOLS_DIR}"
 		rm spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
-		echo "export SPARK_HOME=${SPARK_HOME}" >> ~/.bashrc
-		echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bashrc
-    echo "export PATH=${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin" >> ~/.bashrc
-    echo "export PYSPARK_PYTHON=${PYTHON_HOME}" >> ~/.bashrc
-    source ~/.bashrc
+		#export SPARK_HOME=${SPARK_HOME}
+		#echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bashrc
+    #echo "export PATH=${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin" >> ~/.bashrc
+    #echo "export PYSPARK_PYTHON=${PYTHON_HOME}" >> ~/.bashrc
+    #source ~/.bashrc
 
     # Install smusket
     git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"
