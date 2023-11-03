@@ -32,9 +32,27 @@ elif [ "${OS_VIRT}" == "apptainer" ]; then
     m_echo "RAPL image already exists. Skipping build."
   fi
 fi
-
-cd "${GLOBAL_HOME}"
 chmod +x "${CPUFREQ_HOME}"/get-freq-core.sh
+
+# Build fio if specified
+if [ "${RUN_FIO}" -ne 0 ]; then
+  mkdir -p "${FIO_TARGET}"
+  if [ "${OS_VIRT}" == "docker" ]; then
+    if [ -z "$(docker image ls -q fio)" ]; then
+      m_echo "Building Fio..."
+      docker build -t fio "${FIO_HOME}"
+    else
+      m_echo "Fio image already exists. Skipping build."
+    fi
+  else
+    if [ ! -f "${FIO_HOME}"/fio.sif ]; then
+      m_echo "Building fio..."
+      cd "${FIO_HOME}" && apptainer build -F fio.sif fio.def
+    else
+      m_echo "fio image already exists. Skipping build."
+    fi
+  fi
+fi
 
 # Compile workloads
 if [ "${WORKLOAD}" == "stress-system" ]; then # STRESS-SYSTEM
@@ -106,6 +124,7 @@ elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 
 elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 	if [ ! -d "${SPARK_HOME}" ]; then
+	  # Check Spark dependencies
 		m_echo "Downloading Apache Spark..."
 		if [ -z "${JAVA_HOME}" ]; then
 		  m_err "JAVA_HOME is not set"
@@ -115,15 +134,22 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
       m_err "Python 3 is not installed"
       exit 1
     fi
-		#sudo apt install default-jdk scala git -y
-		wget https://archive.apache.org/dist/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_HADOOP_VERSION}".tgz
-		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz -C "${TOOLS_DIR}"
-		rm spark-"${SPARK_VERSION}"-bin-hadoop3.2.tgz
+
+		# Install Spark
+		wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
+		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz -C "${TOOLS_DIR}"
+		rm spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
 		echo "export SPARK_HOME=${SPARK_HOME}" >> ~/.bashrc
 		echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bashrc
     echo "export PATH=${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin" >> ~/.bashrc
     echo "export PYSPARK_PYTHON=${PYTHON_HOME}" >> ~/.bashrc
     source ~/.bashrc
+
+    # Install smusket
+    git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"
+    sed -i 's/^MERGE_OUTPUT=.*/MERGE_OUTPUT=true/' "${SMUSKET_HOME}"/etc/smusket.conf
+    sed -i 's/^HDFS_BASE_PATH=.*/HDFS_BASE_PATH=\/scratch\/ssd/' "${SMUSKET_HOME}"/etc/smusket.conf
+
 	else
 		m_echo "Apache Spark was already downloaded"
 	fi

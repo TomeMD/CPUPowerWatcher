@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: ljishen/fio:latest
+
+%runscript
+  while true; do
+    fio "$@"
+    sleep 1
+  done
+
+%startscript
+  while true; do
+    fio "$@"
+    sleep 1
+  done

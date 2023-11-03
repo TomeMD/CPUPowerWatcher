@@ -60,13 +60,18 @@ export -f show_logo
 
 function print_conf() {
     show_logo
-    m_echo "Writing output to ${LOG_FILE}"
+    m_echo "InfluxDB host = ${INFLUXDB_HOST}"
+    m_echo "InfluxDB bucket = ${INFLUXDB_BUCKET}"
     m_echo "OS Virtualization Technology = ${OS_VIRT}"
     m_echo "Workload = ${WORKLOAD}"
     if [ "${WORKLOAD}" == "stress-system" ]; then
       m_echo "Stress-system stressors = [${STRESSORS}]"
       m_echo "CPU Stressor Load Types = [${LOAD_TYPES}]"
     fi
+    if [ "${RUN_FIO}" -ne 0 ]; then
+      m_echo "Fio target = ${FIO_TARGET}"
+    fi
+    m_echo "Writing output to ${LOG_FILE}"
 }
 
 export -f print_conf
@@ -217,19 +222,9 @@ export -f run_npb_omp_kernel
 function run_spark() {
   local CORE_ARRAY=()
   IFS=',' read -ra CORE_ARRAY <<< "$CORES"
-  export SPARK_WORKER_INSTANCES="${#CORE_ARRAY[@]}"
   print_timestamp "SPARK (CORES = $CORES) START"
-
-  taskset -c "${CORES}" "${SPARK_HOME}"/sbin/start-worker.sh -c 1 "${SPARK_MASTER_URL}"
-
-  "${SPARK_HOME}"/bin/spark-submit --class org.apache.spark.examples.SparkPi \
-    --master "${SPARK_MASTER_URL}" --deploy-mode client \
-    --conf "spark.driver.extraJavaOptions=${JAVA_EXPORTS}" \
-    --conf "spark.executor.extraJavaOptions=${JAVA_EXPORTS}" \
-    "${SPARK_EXAMPLES_JAR}" 1000
-
+  taskset -c "${CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${DATA_DIR}}/input.fastq" --master local["${#CORE_ARRAY[@]}"] --driver-memory 120g
   print_timestamp "SPARK (CORES = $CORES) STOP"
-  "${SPARK_HOME}"/sbin/stop-worker.sh
   sleep 10
 }
 

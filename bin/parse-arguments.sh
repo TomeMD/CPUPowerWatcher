@@ -12,7 +12,8 @@ Usage: $(basename "$0") [OPTIONS]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
                               geekbench           Run Geekbench kenerls.
-                              spark               Run Apache Spark.
+                              spark               Run Spark-based DNA error correction algorithm (SMusket) using
+                                                  Spark Standalone.
                               stress-system       Run stress tests using stress-system tool. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
@@ -20,7 +21,7 @@ Usage: $(basename "$0") [OPTIONS]
                                                          Used together with CPU stressor. [Default: all]
                                 --other-options          Comma-separated list of other stress-ng options specified
                                                          in key=value format.
-
+  --add-io-noise <target>  Run fio to make random reads/writes over <target> while running the specified workload.
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -h, --help               Show this help and exit
 EOF
@@ -55,6 +56,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --other-options)
       OTHER_OPTIONS="--other ${2} "
+      shift 2
+      ;;
+    --add-io-noise)
+      RUN_FIO=1
+      FIO_TARGET="$2"
       shift 2
       ;;
     -o|--output)
