@@ -3,6 +3,7 @@
 NAME=""
 LOG_FILE=${LOG_DIR}/NPB.log
 TIMESTAMPS_FILE=${LOG_DIR}/NPB.timestamps
+mkdir -p "${BT_IO_TARGET}"
 
 CORES_PER_CPU=$(lscpu | grep "Core(s) per socket:" | awk '{print $4}')
 SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')

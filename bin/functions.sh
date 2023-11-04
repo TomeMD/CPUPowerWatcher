@@ -125,7 +125,7 @@ function start_cpufreq_core() {
   		sleep 1
   		if ps -p "${CORE_CPUFREQ_PID}" > /dev/null; then
     			CPUFREQ_STARTED=1
-    			m_echo "CPUfreq per core succesfully started"
+    			m_echo "CPUfreq per core succesfully started. (PID = ${CORE_CPUFREQ_PID})"
   		else
     			m_err "Error while starting CPUfreq per core. Trying again."
   		fi
@@ -135,12 +135,12 @@ function start_cpufreq_core() {
 export -f start_cpufreq_core
 
 function stop_cpufreq_core() {
-  kill "${CORE_CPUFREQ_PID}"
+  kill "${CORE_CPUFREQ_PID}" > /dev/null 2>&1
 
   if ps -p "${CORE_CPUFREQ_PID}" > /dev/null; then
-     m_err "Error while killing CPUfreq per core process"
+     m_err "Error while killing CPUfreq per core process. (PID = ${CORE_CPUFREQ_PID})"
   else
-     m_echo "CPUfreq per core process succesfully stopped"
+     m_echo "CPUfreq per core process succesfully stopped. (PID = ${CORE_CPUFREQ_PID})"
   fi
 }
 
@@ -205,12 +205,15 @@ function run_npb_mpi_kernel() {
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
+	    COMMAND="while true; do rm -f ${BT_IO_TARGET}/btio.epio.out*; \
+	    mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
       set_sequential_cores ${NUM_THREADS}
 	    start_cpufreq_core
+	    cd "${BT_IO_TARGET}"
 	    print_timestamp "NPB START"
 	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
 	    print_timestamp "NPB STOP"
+	    cd "${GLOBAL_HOME}"
 	    stop_cpufreq_core
 	    BASE=$(( BASE + 1))
 	    NUM_THREADS=$(( BASE * BASE )) # BT I/O needs an square number of processes
