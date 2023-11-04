@@ -1,7 +1,6 @@
 #!/bin/bash
 
 NAME=""
-LOG_FILE=${LOG_DIR}/NPB.log
 TIMESTAMPS_FILE=${LOG_DIR}/NPB.timestamps
 mkdir -p "${BT_IO_TARGET}"
 
@@ -40,6 +39,8 @@ sleep 10
 NAME="BT"
 TIMESTAMPS_FILE=${LOG_DIR}/BT.timestamps
 run_npb_omp_kernel "bin/bt.C.x"
+
+sleep 10
 
 NAME="BT_IO"
 TIMESTAMPS_FILE=${LOG_DIR}/BT_IO.timestamps

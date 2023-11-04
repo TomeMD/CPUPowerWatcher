@@ -139,11 +139,6 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 		wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
 		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz -C "${TOOLS_DIR}"
 		rm spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
-		#export SPARK_HOME=${SPARK_HOME}
-		#echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bashrc
-    #echo "export PATH=${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin" >> ~/.bashrc
-    #echo "export PYSPARK_PYTHON=${PYTHON_HOME}" >> ~/.bashrc
-    #source ~/.bashrc
 
     # Install smusket
     git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"

@@ -14,8 +14,6 @@ export JAVA_EXPORTS="--add-opens=java.base/java.lang=ALL-UNNAMED "\
 "--add-opens=java.base/sun.security.action=ALL-UNNAMED "\
 "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED"
 
-export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
-
 function get_date {
     DATE=`date '+%d/%m/%Y %H:%M:%S'`
 }
@@ -205,8 +203,7 @@ function run_npb_mpi_kernel() {
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do rm -f ${BT_IO_TARGET}/btio.epio.out*; \
-	    mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
+	    COMMAND="while true; do rm -f ${BT_IO_TARGET}/btio.epio.out*; mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
       set_sequential_cores ${NUM_THREADS}
 	    start_cpufreq_core
 	    cd "${BT_IO_TARGET}"
