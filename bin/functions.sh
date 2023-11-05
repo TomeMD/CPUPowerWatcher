@@ -203,18 +203,17 @@ function run_npb_mpi_kernel() {
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do rm -f ${BT_IO_TARGET}/btio.epio.out*; mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
+	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
       set_sequential_cores ${NUM_THREADS}
 	    start_cpufreq_core
-	    cd "${BT_IO_TARGET}"
 	    print_timestamp "NPB START"
 	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
 	    print_timestamp "NPB STOP"
-	    cd "${GLOBAL_HOME}"
 	    stop_cpufreq_core
 	    BASE=$(( BASE + 1))
 	    NUM_THREADS=$(( BASE * BASE )) # BT I/O needs an square number of processes
 	done
+	rm -f "${GLOBAL_HOME}"/btio.epio.out* # Remove BT I/O generated files
 }
 
 export -f run_npb_omp_kernel

@@ -11,4 +11,3 @@ export SPARK_VERSION="3.3.3"
 export CORE_CPUFREQ_PID=0
 export RUN_FIO=0
 export FIO_TARGET=/scratch/ssd/fio
-export BT_IO_TARGET=/scratch/ssd/bt_io
