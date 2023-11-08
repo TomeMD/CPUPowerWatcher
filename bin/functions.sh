@@ -189,11 +189,11 @@ function run_npb_mpi_kernel() {
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to hwthread --map-by core ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
+	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to none --mca btl ^openib ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
       set_sequential_cores ${NUM_THREADS}
 	    start_cpufreq_core
 	    print_timestamp "NPB START"
-	    timeout 5m bash -c "${COMMAND}"
+	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
 	    print_timestamp "NPB STOP"
 	    stop_cpufreq_core
 	    BASE=$(( BASE + 1))
