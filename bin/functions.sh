@@ -1,19 +1,5 @@
 #!/bin/sh
 
-export JAVA_EXPORTS="--add-opens=java.base/java.lang=ALL-UNNAMED "\
-"--add-opens=java.base/java.lang.invoke=ALL-UNNAMED "\
-"--add-opens=java.base/java.lang.reflect=ALL-UNNAMED "\
-"--add-opens=java.base/java.io=ALL-UNNAMED "\
-"--add-opens=java.base/java.net=ALL-UNNAMED "\
-"--add-opens=java.base/java.nio=ALL-UNNAMED "\
-"--add-opens=java.base/java.util=ALL-UNNAMED "\
-"--add-opens=java.base/java.util.concurrent=ALL-UNNAMED "\
-"--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED "\
-"--add-opens=java.base/sun.nio.ch=ALL-UNNAMED "\
-"--add-opens=java.base/sun.nio.cs=ALL-UNNAMED "\
-"--add-opens=java.base/sun.security.action=ALL-UNNAMED "\
-"--add-opens=java.base/sun.util.calendar=ALL-UNNAMED"
-
 function get_date {
     DATE=`date '+%d/%m/%Y %H:%M:%S'`
 }
@@ -203,11 +189,11 @@ function run_npb_mpi_kernel() {
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
+	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to hwthread --map-by core ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
       set_sequential_cores ${NUM_THREADS}
 	    start_cpufreq_core
 	    print_timestamp "NPB START"
-	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
+	    timeout 5m bash -c "${COMMAND}"
 	    print_timestamp "NPB STOP"
 	    stop_cpufreq_core
 	    BASE=$(( BASE + 1))
@@ -219,12 +205,21 @@ function run_npb_mpi_kernel() {
 export -f run_npb_omp_kernel
 
 function run_spark() {
-  local CORE_ARRAY=()
-  IFS=',' read -ra CORE_ARRAY <<< "$CORES"
-  print_timestamp "SPARK (CORES = $CORES) START"
-  taskset -c "${CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${DATA_DIR}/input.fastq" --master local["${#CORE_ARRAY[@]}"] --driver-memory 120g
-  print_timestamp "SPARK (CORES = $CORES) STOP"
-  sleep 10
+	local CORE_ARRAY=()
+	IFS=',' read -ra CORE_ARRAY <<< "$CORES"
+	NUM_THREADS=1
+	while [ "${NUM_THREADS}" -le "${THREADS}" ]
+	do
+		set_sequential_cores ${NUM_THREADS}
+		start_cpufreq_core
+		print_timestamp "SPARK (CORES = $CORES) START"
+		taskset -c "${CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${SPARK_DATA_DIR}/input.fastq -n 64 -k 25" --master local["${NUM_THREADS}"] --driver-memory 200g
+		print_timestamp "SPARK (CORES = $CORES) STOP"
+		stop_cpufreq_core
+		rm -rf "${DATA_DIR}"/blockmgr* "${DATA_DIR}"/spark-*
+		NUM_THREADS=$(( NUM_THREADS * 2 ))
+		sleep 10
+	done
 }
 
 export -f run_spark

@@ -3,7 +3,6 @@
 export BIN_DIR="${GLOBAL_HOME}"/bin
 export CONF_DIR="${GLOBAL_HOME}"/etc
 export TOOLS_DIR="${GLOBAL_HOME}"/tools
-export DATA_DIR="${GLOBAL_HOME}"/data
 export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
 
 export GLANCES_HOME="${TOOLS_DIR}"/cpu_power_monitor/glances

@@ -134,6 +134,10 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
       m_err "Python 3 is not installed"
       exit 1
     fi
+    if [ ! -d "${SPARK_DATA_DIR}" ]; then
+      m_err "Specified Spark Data directory doesn't exist: ${SPARK_DATA_DIR}"
+      exit 1
+    fi
 
 		# Install Spark
 		wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
@@ -143,8 +147,8 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
     # Install smusket
     git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"
     sed -i 's/^MERGE_OUTPUT=.*/MERGE_OUTPUT=true/' "${SMUSKET_HOME}"/etc/smusket.conf
+    sed -i 's/^SERIALIZED_RDD=.*/SERIALIZED_RDD=false/' "${SMUSKET_HOME}"/etc/smusket.conf
     sed -i 's/^HDFS_BASE_PATH=.*/HDFS_BASE_PATH=\/scratch\/ssd/' "${SMUSKET_HOME}"/etc/smusket.conf
-
 	else
 		m_echo "Apache Spark was already downloaded"
 	fi

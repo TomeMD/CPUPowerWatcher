@@ -14,6 +14,9 @@ Usage: $(basename "$0") [OPTIONS]
                               geekbench           Run Geekbench kenerls.
                               spark               Run Spark-based DNA error correction algorithm (SMusket) using
                                                   Spark Standalone.
+                                --spark-data-dir  Directory to store Spark temporary files and Spark Smusket input.
+                                                  Input must be a FASTQ file named "input.fastq".
+
                               stress-system       Run stress tests using stress-system tool. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
@@ -21,6 +24,7 @@ Usage: $(basename "$0") [OPTIONS]
                                                          Used together with CPU stressor. [Default: all]
                                 --other-options          Comma-separated list of other stress-ng options specified
                                                          in key=value format.
+
   --add-io-noise <target>  Run fio to make random reads/writes over <target> while running the specified workload.
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -h, --help               Show this help and exit
@@ -44,6 +48,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -w|--workload)
       WORKLOAD="$2"
+      shift 2
+      ;;
+    --spark-data-dir)
+      SPARK_DATA_DIR="$2"
       shift 2
       ;;
     --stressors)

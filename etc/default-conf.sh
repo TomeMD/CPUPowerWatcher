@@ -1,4 +1,5 @@
 export LOG_DIR="${GLOBAL_HOME}"/log
+export SPARK_DATA_DIR="${GLOBAL_HOME}"/data
 export OS_VIRT="docker"
 export WORKLOAD="stress-system"
 export STRESSORS="cpu"
@@ -11,3 +12,4 @@ export SPARK_VERSION="3.3.3"
 export CORE_CPUFREQ_PID=0
 export RUN_FIO=0
 export FIO_TARGET=/scratch/ssd/fio
+export SPARK_DATA_DIR="${GLOBAL_HOME}"/data
