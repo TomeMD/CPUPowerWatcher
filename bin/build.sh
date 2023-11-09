@@ -34,25 +34,6 @@ elif [ "${OS_VIRT}" == "apptainer" ]; then
 fi
 chmod +x "${CPUFREQ_HOME}"/get-freq-core.sh
 
-# Build fio if specified
-if [ "${RUN_FIO}" -ne 0 ]; then
-  mkdir -p "${FIO_TARGET}"
-  if [ "${OS_VIRT}" == "docker" ]; then
-    if [ -z "$(docker image ls -q fio)" ]; then
-      m_echo "Building Fio..."
-      docker build -t fio "${FIO_HOME}"
-    else
-      m_echo "Fio image already exists. Skipping build."
-    fi
-  elif [ "${OS_VIRT}" == "apptainer" ]; then
-    if [ ! -f "${FIO_HOME}"/fio.sif ]; then
-      m_echo "Building fio..."
-      cd "${FIO_HOME}" && apptainer build -F fio.sif fio.def
-    else
-      m_echo "fio image already exists. Skipping build."
-    fi
-  fi
-fi
 
 # Compile workloads
 if [ "${WORKLOAD}" == "stress-system" ]; then # STRESS-SYSTEM
@@ -152,6 +133,23 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 	else
 		m_echo "Apache Spark was already downloaded"
 	fi
+elif [ "${WORKLOAD}" == "fio" ] || [ "${ADD_IO_NOISE}" -ne 0 ]; then # FIO
+  mkdir -p "${FIO_TARGET}"
+  if [ "${OS_VIRT}" == "docker" ]; then
+    if [ -z "$(docker image ls -q fio)" ]; then
+      m_echo "Building Fio..."
+      docker build -t fio "${FIO_HOME}"
+    else
+      m_echo "Fio image already exists. Skipping build."
+    fi
+  elif [ "${OS_VIRT}" == "apptainer" ]; then
+    if [ ! -f "${FIO_HOME}"/fio.sif ]; then
+      m_echo "Building fio..."
+      cd "${FIO_HOME}" && apptainer build -F fio.sif fio.def
+    else
+      m_echo "fio image already exists. Skipping build."
+    fi
+  fi
 fi
 
 cd "${GLOBAL_HOME}"

@@ -9,7 +9,7 @@ else
 	sudo apptainer instance start "${RAPL_HOME}"/rapl.sif rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}"
 fi
 
-if [ "${RUN_FIO}" -ne 0 ]; then
+if [ "${ADD_IO_NOISE}" -ne 0 ]; then
   FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --numjobs=1"
   if [ "${OS_VIRT}" == "docker" ]; then
     docker run -d --name fio --pid host --privileged --network host --restart=unless-stopped -v "${FIO_TARGET}":/tmp fio ${FIO_OPTIONS}

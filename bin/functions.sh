@@ -52,7 +52,7 @@ function print_conf() {
       m_echo "Stress-system stressors = [${STRESSORS}]"
       m_echo "CPU Stressor Load Types = [${LOAD_TYPES}]"
     fi
-    if [ "${RUN_FIO}" -ne 0 ]; then
+    if [ "${ADD_IO_NOISE}" -ne 0 ]; then
       m_echo "Fio target = ${FIO_TARGET}"
     fi
     m_echo "Writing output to ${LOG_FILE}"
@@ -178,6 +178,7 @@ function run_npb_omp_kernel() {
 	    print_timestamp "NPB STOP"
 	    stop_cpufreq_core
 	    NUM_THREADS=$(( NUM_THREADS * 2 ))
+	    sleep 30
 	done
 }
 
@@ -198,6 +199,7 @@ function run_npb_mpi_kernel() {
 	    stop_cpufreq_core
 	    BASE=$(( BASE + 1))
 	    NUM_THREADS=$(( BASE * BASE )) # BT I/O needs an square number of processes
+	    sleep 30
 	done
 	rm -f "${GLOBAL_HOME}"/btio.epio.out* # Remove BT I/O generated files
 }
@@ -205,8 +207,6 @@ function run_npb_mpi_kernel() {
 export -f run_npb_omp_kernel
 
 function run_spark() {
-	local CORE_ARRAY=()
-	IFS=',' read -ra CORE_ARRAY <<< "$CORES"
 	NUM_THREADS=1
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
@@ -223,6 +223,36 @@ function run_spark() {
 }
 
 export -f run_spark
+
+function run_fio() {
+	NUM_THREADS=1
+	MAX_THREADS=8
+	while [ "${NUM_THREADS}" -le "${MAX_THREADS}" ]
+	do
+	  FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS}"
+		set_sequential_cores ${NUM_THREADS}
+		start_cpufreq_core
+		print_timestamp "FIO (CORES = $CORES) START"
+    if [ "${OS_VIRT}" == "docker" ]; then
+      docker run -d --rm --cpuset-cpus "${CORES}" --name fio -v "${FIO_TARGET}":/tmp fio ${FIO_OPTIONS}
+    else
+      sudo apptainer instance start --cpuset-cpus "${CORES}" -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio ${FIO_OPTIONS}
+    fi
+    sleep 300
+		print_timestamp "FIO (CORES = $CORES) STOP"
+    if [ "${OS_VIRT}" == "docker" ]; then
+      docker stop fio
+    else
+      sudo apptainer instance stop fio
+    fi
+		stop_cpufreq_core
+		rm -rf "${FIO_TARGET}"/fio_job*
+		NUM_THREADS=$(( NUM_THREADS * 2 ))
+		sleep 30
+	done
+}
+
+export -f run_fio
 
 function idle_cpu() {
 	print_timestamp "IDLE START"

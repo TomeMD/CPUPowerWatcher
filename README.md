@@ -15,11 +15,15 @@ Usage: run.sh [OPTIONS]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
                               geekbench           Run Geekbench kenerls.
-                              spark               Run Spark-based DNA error correction algorithm (SMusket) using 
+                              fio                 Run fio to make random reads/writes over specified target with
+                                                  different numbers of threads.
+                                --fio-target      Directory to make random reads/writes. [Default: /tmp/fio]
+
+                              spark               Run Spark-based DNA error correction algorithm (SMusket) using
                                                   Spark Standalone.
                                 --spark-data-dir  Directory to store Spark temporary files and Spark Smusket input.
                                                   Input must be a FASTQ file named "input.fastq".
-                                                  
+
                               stress-system       Run stress tests using stress-system tool. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
@@ -27,8 +31,10 @@ Usage: run.sh [OPTIONS]
                                                          Used together with CPU stressor. [Default: all]
                                 --other-options          Comma-separated list of other stress-ng options specified
                                                          in key=value format.
-                                                         
-  --add-io-noise <target>  Run fio to do random reads/writes over <target> while running the specified workload.
+
+  --add-io-noise           Run fio to make random reads/writes over specified target while running the specified
+                           workload. Use --fio-target to specify target directory. This option is not compatible with
+                           fio tests.
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -h, --help               Show this help and exit
 ````

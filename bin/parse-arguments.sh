@@ -12,6 +12,10 @@ Usage: $(basename "$0") [OPTIONS]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
                               geekbench           Run Geekbench kenerls.
+                              fio                 Run fio to make random reads/writes over specified target with
+                                                  different numbers of threads.
+                                --fio-target      Directory to make random reads/writes. [Default: /tmp/fio]
+
                               spark               Run Spark-based DNA error correction algorithm (SMusket) using
                                                   Spark Standalone.
                                 --spark-data-dir  Directory to store Spark temporary files and Spark Smusket input.
@@ -25,7 +29,9 @@ Usage: $(basename "$0") [OPTIONS]
                                 --other-options          Comma-separated list of other stress-ng options specified
                                                          in key=value format.
 
-  --add-io-noise <target>  Run fio to make random reads/writes over <target> while running the specified workload.
+  --add-io-noise           Run fio to make random reads/writes over specified target while running the specified
+                           workload. Use --fio-target to specify target directory. This option is not compatible with
+                           fio tests.
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -h, --help               Show this help and exit
 EOF
@@ -50,6 +56,10 @@ while [[ $# -gt 0 ]]; do
       WORKLOAD="$2"
       shift 2
       ;;
+    --fio-target)
+      FIO_TARGET="$2"
+      shift 2
+      ;;
     --spark-data-dir)
       SPARK_DATA_DIR="$2"
       shift 2
@@ -67,9 +77,8 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --add-io-noise)
-      RUN_FIO=1
-      FIO_TARGET="$2"
-      shift 2
+      ADD_IO_NOISE=1
+      shift 1
       ;;
     -o|--output)
       LOG_DIR="$2"

@@ -8,7 +8,7 @@ else
 	sudo apptainer instance stop rapl && sudo apptainer instance stop glances
 fi
 
-if [ "${RUN_FIO}" -ne 0 ]; then
+if [ "${ADD_IO_NOISE}" -ne 0 ]; then
   if [ "${OS_VIRT}" == "docker" ]; then
     docker stop fio
     docker rm fio

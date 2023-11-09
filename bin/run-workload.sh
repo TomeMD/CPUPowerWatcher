@@ -6,6 +6,8 @@ if [ "${WORKLOAD}" == "npb" ]; then
   . "${BIN_DIR}"/npb-tests.sh
 elif [ "${WORKLOAD}" == "spark" ]; then
   . "${BIN_DIR}"/spark-tests.sh
+elif [ "${WORKLOAD}" == "fio" ]; then
+  . "${BIN_DIR}"/fio-tests.sh
 else
   if [ "${SOCKETS}" -eq "1" ]; then
     . "${BIN_DIR}"/tests-singlesocket.sh
