@@ -133,9 +133,9 @@ export -f stop_cpufreq_core
 function run_stress-system() {
 	print_timestamp "STRESS-TEST (CORES = $CORES) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
+		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 4m >> "${LOG_FILE}" 2>&1
 	else
-		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 2m >> "${LOG_FILE}" 2>&1
+		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 4m >> "${LOG_FILE}" 2>&1
 	fi
 	print_timestamp "STRESS-TEST (CORES = $CORES) STOP"
 	sleep 15
@@ -263,6 +263,19 @@ function idle_cpu() {
 
 export -f idle_cpu
 
+function run_seq_experiment() {
+  TEST_FUNCTION=$1
+  CORES="0"
+  LOAD=50
+	while [ "${LOAD}" -le "100" ]; do
+    start_cpufreq_core
+    "${TEST_FUNCTION}"
+    idle_cpu
+    stop_cpufreq_core
+    LOAD=$((LOAD + 50))
+  done
+}
+
 ################################################################################################
 # run_experiment <NAME> <PAIR_OFFSET> <INCREMENT> <CPU_SWITCH> <TOTAL_PAIRS> <TEST_FUNCTION>
 ################################################################################################
@@ -291,20 +304,22 @@ function run_experiment() {
 	INCREMENT=$4
 	CPU_SWITCH=$5
 	TEST_FUNCTION=$6
+
 	if [ "${CPU_SWITCH}" -eq $((PHY_CORES_PER_CPU / 2)) ]; then
 		CPUS_FIRST_CORE=(0 $((PHY_CORES_PER_CPU * 2))) # (1st physical core cpu0, 1st logical core cpu 0)
 	else
 		CPUS_FIRST_CORE=(0 "${PHY_CORES_PER_CPU}") # (1st physical core cpu0, 1st physical core cpu 1)
 	fi
-	CPU=0
-	CORES=""
-	LOAD=200
 	local PAIRS_COUNT=0
 	local START_TEST=$(date +%s%N)
+	run_seq_experiment "${TEST_FUNCTION}"
+  CPU=0
+  CORES=""
+	LOAD=200
 	while [ "${PAIRS_COUNT}" -lt "${TOTAL_PAIRS}" ]; do
 	    set_cores
 	    start_cpufreq_core
-	    "$TEST_FUNCTION"
+	    "${TEST_FUNCTION}"
 	    idle_cpu
 	    stop_cpufreq_core
 	    LOAD=$((LOAD + 200))
