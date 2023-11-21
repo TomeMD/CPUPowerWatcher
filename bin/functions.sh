@@ -74,37 +74,24 @@ function print_timestamp() {
 
 export -f print_timestamp
 
-function set_sequential_cores() {
-  MAX=$1
-  CORES=""
-  for (( i=0; i<MAX; i++ )); do
-      if [ "$i" -ne 0 ]; then
-        CORES+=","
+function set_n_cores() {
+  NUM_THREADS=$1
+  CURRENT_CORES=""
+  for (( i=0; i<NUM_THREADS; i++ )); do
+    if [ "$i" -ne 0 ]; then
+      CURRENT_CORES+=","
     fi
-    CORES+="$i"
+    CURRENT_CORES+="${CORES_ARRAY[i]}"
   done
 }
 
-export -f set_sequential_cores
-
-function set_cores() {
-	CORE_0="${CPUS_FIRST_CORE[$((CPU % 2))]}"
-	CORE_1=$((CORE_0 + PAIR_OFFSET))
-	if [ -z "${CORES}" ]; then
-	  CORES+="${CORE_0},${CORE_1}"
-	else
-	  CORES+=",${CORE_0},${CORE_1}"
-	fi
-	CPUS_FIRST_CORE[$((CPU % 2))]=$((CORE_0 + INCREMENT))
-}
-
-export -f set_cores
+export -f set_n_cores
 
 function start_cpufreq_core() {
 	CPUFREQ_STARTED=0
 	while [ "${CPUFREQ_STARTED}" -eq 0 ]
 	do
-  		"${CPUFREQ_HOME}"/get-freq-core.sh "${CORES}" "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" > /dev/null 2>&1 &
+  		"${CPUFREQ_HOME}"/get-freq-core.sh "${CURRENT_CORES}" "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" > /dev/null 2>&1 &
   		CORE_CPUFREQ_PID=$!
   		sleep 1
   		if ps -p "${CORE_CPUFREQ_PID}" > /dev/null; then
@@ -131,35 +118,35 @@ function stop_cpufreq_core() {
 export -f stop_cpufreq_core
 
 function run_stress-system() {
-	print_timestamp "STRESS-TEST (CORES = $CORES) START"
+	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 4m >> "${LOG_FILE}" 2>&1
+		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t 4m >> "${LOG_FILE}" 2>&1
 	else
-		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CORES}" -t 4m >> "${LOG_FILE}" 2>&1
+		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t 4m >> "${LOG_FILE}" 2>&1
 	fi
-	print_timestamp "STRESS-TEST (CORES = $CORES) STOP"
+	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) STOP"
 	sleep 15
 }
 
 export -f run_stress-system
 
 function run_sysbench() {
-	print_timestamp "SYSBENCH (CORES = $CORES) START"
+	print_timestamp "SYSBENCH (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name sysbench -it sysbench "${CORES}" >> "${LOG_FILE}" 2>&1
+		docker run --rm --name sysbench -it sysbench "${CURRENT_CORES}" >> "${LOG_FILE}" 2>&1
 	else
-		apptainer run "${SYSBENCH_HOME}"/sysbench.sif "${CORES}" >> "${LOG_FILE}" 2>&1
+		apptainer run "${SYSBENCH_HOME}"/sysbench.sif "${CURRENT_CORES}" >> "${LOG_FILE}" 2>&1
 	fi
-	print_timestamp "SYSBENCH (CORES = $CORES) STOP"
+	print_timestamp "SYSBENCH (CORES = ${CURRENT_CORES}) STOP"
 	sleep 15
 }
 
 export -f run_sysbench
 
 function run_geekbench() {
-	print_timestamp "GEEKBENCH (CORES = $CORES) START"
-	taskset -c "${CORES}" "${GEEKBENCH_HOME}"/geekbench_x86_64 | tee -a "${LOG_FILE}"
-	print_timestamp "GEEKBENCH (CORES = $CORES) STOP"
+	print_timestamp "GEEKBENCH (CORES = ${CURRENT_CORES}) START"
+	taskset -c "${CURRENT_CORES}" "${GEEKBENCH_HOME}"/geekbench_x86_64 | tee -a "${LOG_FILE}"
+	print_timestamp "GEEKBENCH (CORES = ${CURRENT_CORES}) STOP"
 	sleep 15
 }
 
@@ -167,15 +154,17 @@ export -f run_geekbench
 
 function run_npb_omp_kernel() {
 	local COMMAND="while true; do ${NPB_OMP_HOME}/${1} | tee -a ${LOG_FILE}; done"
+	shift 1
+	CORES_ARRAY=("$@")
 	NUM_THREADS=1
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-      set_sequential_cores ${NUM_THREADS}
+      set_n_cores ${NUM_THREADS}
 	    start_cpufreq_core
-	    print_timestamp "NPB START"
+	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) START"
 	    export OMP_NUM_THREADS="${NUM_THREADS}"
-	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
-	    print_timestamp "NPB STOP"
+	    taskset -c "${CURRENT_CORES}" timeout 5m bash -c "${COMMAND}"
+	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) STOP"
 	    stop_cpufreq_core
 	    NUM_THREADS=$(( NUM_THREADS * 2 ))
 	    sleep 30
@@ -186,16 +175,19 @@ export -f run_npb_omp_kernel
 
 function run_npb_mpi_kernel() {
 	local COMMAND=""
+	local NPB_KERNEL=${1}
+	shift 1
+	CORES_ARRAY=("$@")
 	BASE=1
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to none --mca btl ^openib ${NPB_MPI_HOME}/${1} | tee -a ${LOG_FILE}; done"
-      set_sequential_cores ${NUM_THREADS}
+	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to none --mca btl ^openib ${NPB_MPI_HOME}/${NPB_KERNEL} | tee -a ${LOG_FILE}; done"
+      set_n_cores ${NUM_THREADS}
 	    start_cpufreq_core
-	    print_timestamp "NPB START"
-	    taskset -c "${CORES}" timeout 5m bash -c "${COMMAND}"
-	    print_timestamp "NPB STOP"
+	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) START"
+	    taskset -c "${CURRENT_CORES}" timeout 5m bash -c "${COMMAND}"
+	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) STOP"
 	    stop_cpufreq_core
 	    BASE=$(( BASE + 1))
 	    NUM_THREADS=$(( BASE * BASE )) # BT I/O needs an square number of processes
@@ -204,17 +196,18 @@ function run_npb_mpi_kernel() {
 	rm -f "${GLOBAL_HOME}"/btio.epio.out* # Remove BT I/O generated files
 }
 
-export -f run_npb_omp_kernel
+export -f run_npb_mpi_kernel
 
 function run_spark() {
+  CORES_ARRAY=("$@")
 	NUM_THREADS=1
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-		set_sequential_cores ${NUM_THREADS}
+		set_n_cores ${NUM_THREADS}
 		start_cpufreq_core
-		print_timestamp "SPARK (CORES = $CORES) START"
-		taskset -c "${CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${SPARK_DATA_DIR}/input.fastq -n 64 -k 25" --master local["${NUM_THREADS}"] --driver-memory 200g
-		print_timestamp "SPARK (CORES = $CORES) STOP"
+		print_timestamp "SPARK (CORES = ${CURRENT_CORES}) START"
+		taskset -c "${CURRENT_CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${SPARK_DATA_DIR}/input.fastq -n 64 -k 25" --master local["${NUM_THREADS}"] --driver-memory 200g
+		print_timestamp "SPARK (CORES = ${CURRENT_CORES}) STOP"
 		stop_cpufreq_core
 		rm -rf "${DATA_DIR}"/blockmgr* "${DATA_DIR}"/spark-*
 		NUM_THREADS=$(( NUM_THREADS * 2 ))
@@ -225,21 +218,22 @@ function run_spark() {
 export -f run_spark
 
 function run_fio() {
+  CORES_ARRAY=("$@")
 	NUM_THREADS=1
 	MAX_THREADS=8
 	while [ "${NUM_THREADS}" -le "${MAX_THREADS}" ]
 	do
 	  FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS}"
-		set_sequential_cores ${NUM_THREADS}
+		set_n_cores ${NUM_THREADS}
 		start_cpufreq_core
-		print_timestamp "FIO (CORES = $CORES) START"
+		print_timestamp "FIO (CORES = ${CURRENT_CORES}) START"
     if [ "${OS_VIRT}" == "docker" ]; then
-      docker run -d --rm --cpuset-cpus "${CORES}" --name fio -v "${FIO_TARGET}":/tmp fio ${FIO_OPTIONS}
+      docker run -d --rm --cpuset-cpus "${CURRENT_CORES}" --name fio -v "${FIO_TARGET}":/tmp fio ${FIO_OPTIONS}
     else
-      sudo apptainer instance start --cpuset-cpus "${CORES}" -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio ${FIO_OPTIONS}
+      sudo apptainer instance start --cpuset-cpus "${CURRENT_CORES}" -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio ${FIO_OPTIONS}
     fi
     sleep 300
-		print_timestamp "FIO (CORES = $CORES) STOP"
+		print_timestamp "FIO (CORES = ${CURRENT_CORES}) STOP"
     if [ "${OS_VIRT}" == "docker" ]; then
       docker stop fio
     else
@@ -265,7 +259,7 @@ export -f idle_cpu
 
 function run_seq_experiment() {
   TEST_FUNCTION=$1
-  CORES="0"
+  CURRENT_CORES="0"
   LOAD=50
 	while [ "${LOAD}" -le "100" ]; do
     start_cpufreq_core
@@ -276,57 +270,29 @@ function run_seq_experiment() {
   done
 }
 
-################################################################################################
-# run_experiment <NAME> <PAIR_OFFSET> <INCREMENT> <CPU_SWITCH> <TOTAL_PAIRS> <TEST_FUNCTION>
-################################################################################################
-# <NAME>: Name of the experiment
-#
-# <TOTAL_PAIRS>: Total pairs of cores.
-#
-# <PAIR_OFFSET>: Distance between the cores in a pair, for example, if we use pairs 
-# (0,16), (1,17),... PAIR_OFFSET will be 16.
-#
-# <INCREMENT>: Increment of the number of the first core of each pair between iterations. This 
-# INCREMENT is applied independently to the pairs of each CPU. Examples:
-#     cores=(0 1 2 3 4 5 6 7) INCREMENT=2
-#     cores=(0 16 1 17 2 18 3 19) INCREMENT=1
-#
-# <CPU_SWITCH>: Frequency in iterations to switch between CPUs. Set 0 to avoid switching 
-# between CPUs.
-#
-# <TEST_FUNCTION>: Benchmark/tool to stress CPU.
-#
-################################################################################################
+export -f run_seq_experiment
+
 function run_experiment() { 
 	NAME=$1
-	TOTAL_PAIRS=$2
-	PAIR_OFFSET=$3
-	INCREMENT=$4
-	CPU_SWITCH=$5
-	TEST_FUNCTION=$6
+	TEST_FUNCTION=$2
+	shift 2
+	CORES_ARRAY=("$@")
 
-	if [ "${CPU_SWITCH}" -eq $((PHY_CORES_PER_CPU / 2)) ]; then
-		CPUS_FIRST_CORE=(0 $((PHY_CORES_PER_CPU * 2))) # (1st physical core cpu0, 1st logical core cpu 0)
-	else
-		CPUS_FIRST_CORE=(0 "${PHY_CORES_PER_CPU}") # (1st physical core cpu0, 1st physical core cpu 1)
-	fi
-	local PAIRS_COUNT=0
 	local START_TEST=$(date +%s%N)
 	run_seq_experiment "${TEST_FUNCTION}"
-  CPU=0
-  CORES=""
+  CURRENT_CORES=""
 	LOAD=200
-	while [ "${PAIRS_COUNT}" -lt "${TOTAL_PAIRS}" ]; do
-	    set_cores
+	for ((i = 0; i < ${#CORES_ARRAY[@]}; i += 2)); do
+      if [ -z "${CURRENT_CORES}" ]; then
+          CURRENT_CORES+="${CORES_ARRAY[i]},${CORES_ARRAY[i+1]}"
+      else
+          CURRENT_CORES+=",${CORES_ARRAY[i]},${CORES_ARRAY[i+1]}"
+      fi
 	    start_cpufreq_core
 	    "${TEST_FUNCTION}"
 	    idle_cpu
 	    stop_cpufreq_core
 	    LOAD=$((LOAD + 200))
-	    PAIRS_COUNT=$((PAIRS_COUNT + 1))
-		if [ "${CPU_SWITCH}" -ne 0 ] && [ $((PAIRS_COUNT % CPU_SWITCH)) -eq 0 ]; then
-			CPU=$((CPU + 1))
-		fi
 	done
 	local END_TEST=$(date +%s%N)
   print_time "${START_TEST}" "${END_TEST}"
