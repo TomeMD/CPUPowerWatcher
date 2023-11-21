@@ -13,3 +13,5 @@ export CORE_CPUFREQ_PID=0
 export ADD_IO_NOISE=0
 export FIO_TARGET=/tmp/fio
 export SPARK_DATA_DIR="${GLOBAL_HOME}"/data
+export CUSTOM_TESTS=0
+export CUSTOM_TESTS_FILE="${GLOBAL_HOME}"/bin/custom-tests.sh

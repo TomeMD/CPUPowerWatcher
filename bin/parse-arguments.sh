@@ -29,10 +29,12 @@ Usage: $(basename "$0") [OPTIONS]
                                 --other-options          Comma-separated list of other stress-ng options specified
                                                          in key=value format.
 
+  -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   --add-io-noise           Run fio to make random reads/writes over specified target while running the specified
                            workload. Use --fio-target to specify target directory. This option is not compatible with
                            fio tests.
-  -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
+  --custom-tests <file>    Use custom tests file to create custom lists of cores to stress.
+                           [Default: ./tests/custom-tests.sh]
   -h, --help               Show this help and exit
 EOF
 exit 1
@@ -76,13 +78,22 @@ while [[ $# -gt 0 ]]; do
       OTHER_OPTIONS="--other ${2} "
       shift 2
       ;;
+    -o|--output)
+      LOG_DIR="$2"
+      shift 2
+      ;;
     --add-io-noise)
       ADD_IO_NOISE=1
       shift 1
       ;;
-    -o|--output)
-      LOG_DIR="$2"
-      shift 2
+    --custom-tests)
+      CUSTOM_TESTS=1
+      if [ -n "$2" ];then
+        CUSTOM_TESTS_FILE="$2"
+        shift 2
+      else
+        shift 1
+      fi
       ;;
     -h|--help)
       usage
