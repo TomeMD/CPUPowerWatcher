@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. "${BIN_DIR}"/get-cores-lists-multisocket.sh
+. "${TEST_DIR}"/get-cores-lists-multisocket.sh
 
 # Initial wait
 sleep 30

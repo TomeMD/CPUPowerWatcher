@@ -1,8 +1,6 @@
 #!/bin/bash
 
-export THREADS=$((CORES_PER_CPU * SOCKETS * 2))
-
-. "${BIN_DIR}"/get-sequential-cores-list.sh
+. "${TEST_DIR}"/get-sequential-cores-list.sh
 
 # Initial wait
 sleep 30

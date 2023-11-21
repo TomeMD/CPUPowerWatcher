@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. "${BIN_DIR}"/get-sequential-cores-list.sh
+. "${TEST_DIR}"/get-sequential-cores-list.sh
 
 # Initial wait
 sleep 30

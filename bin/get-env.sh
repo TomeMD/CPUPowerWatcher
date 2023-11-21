@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export BIN_DIR="${GLOBAL_HOME}"/bin
+export TEST_DIR="${BIN_DIR}"/test
 export CONF_DIR="${GLOBAL_HOME}"/etc
 export TOOLS_DIR="${GLOBAL_HOME}"/tools
 export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
@@ -21,5 +22,4 @@ export SMUSKET_HOME="${TOOLS_DIR}"/smusket
 export PYTHON_HOME="$(which python3)"
 export JAVA_HOME="$(dirname $(dirname $(readlink -f $(which java))))"
 
-export PHY_CORES_PER_CPU=$(lscpu | grep "Core(s) per socket:" | awk '{print $4}')
-export SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')
+. "${BIN_DIR}"/get-hw-info.sh

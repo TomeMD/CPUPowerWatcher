@@ -1,15 +1,5 @@
 #!/bin/bash
 
-output=$(lscpu -e | awk 'NR > 1 { print $1, $4 }')
-declare -A CORES_DICT
-while read -r cpu core; do
-    if [ -z "${CORES_DICT[$core]}" ]; then
-        CORES_DICT["$core"]="$cpu"
-    else
-        CORES_DICT["$core"]="${CORES_DICT[$core]},$cpu"
-    fi
-done <<< "$output"
-
 export ONLY_P_CORES=()
 
 for ((CORE = 0; CORE < ${#CORES_DICT[@]}; CORE += 1)); do

@@ -7,7 +7,7 @@
 #   48-63 logical cores CPU1
 
 # Initial wait
-#sleep 30
+sleep 30
 
 # Start tests
 START=$(date +%s%N)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ${BIN_DIR}/get-cores-lists-singlesocket.sh
+. "${TEST_DIR}"/get-cores-lists-singlesocket.sh
 
 # Initial wait
 sleep 30
