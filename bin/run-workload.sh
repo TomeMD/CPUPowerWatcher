@@ -3,7 +3,7 @@
 m_echo "Running ${WORKLOAD} tests..."
 
 if [ "${CUSTOM_TESTS}" -ne "0" ];then
-  m_echo "Custom tests mode is active. Running custom tests from ${CUSTOM_TESTS_FILE}..."
+  m_echo "Custom tests mode is active. Running custom tests from ${CUSTOM_TESTS_FILE}"
   . "${CUSTOM_TESTS_FILE}"
 elif [ "${WORKLOAD}" == "npb" ]; then
   . "${TEST_DIR}"/npb-tests.sh

@@ -2,7 +2,7 @@
 
 export PHY_CORES_PER_CPU=$(lscpu | grep "Core(s) per socket:" | awk '{print $4}')
 export SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')
-export THREADS=$((CORES_PER_CPU * SOCKETS * 2))
+export THREADS=$((PHY_CORES_PER_CPU * SOCKETS * 2))
 
 declare -A CORES_DICT
 output=$(lscpu -e | awk 'NR > 1 { print $1, $4 }')

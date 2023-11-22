@@ -13,4 +13,4 @@ export ADD_IO_NOISE=0
 export FIO_TARGET=/tmp/fio
 export SPARK_DATA_DIR="${GLOBAL_HOME}"/data
 export CUSTOM_TESTS=0
-export CUSTOM_TESTS_FILE="${GLOBAL_HOME}"/bin/etc/custom-tests.sh
+export CUSTOM_TESTS_FILE="${GLOBAL_HOME}"/bin/test/custom-tests.sh
