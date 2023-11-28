@@ -206,12 +206,12 @@ function run_spark() {
 		set_n_cores ${NUM_THREADS}
 		start_cpufreq_core
 		print_timestamp "SPARK (CORES = ${CURRENT_CORES}) START"
-		taskset -c "${CURRENT_CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${SPARK_DATA_DIR}/input.fastq -n 64 -k 25" --master local["${NUM_THREADS}"] --driver-memory 200g
+		taskset -c "${CURRENT_CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${SPARK_DATA_DIR}/ERR031558.fastq -n 64 -k 25" --conf "spark.local.dir=${SPARK_DATA_DIR}" --master local["${NUM_THREADS}"] --driver-memory 200g
 		print_timestamp "SPARK (CORES = ${CURRENT_CORES}) STOP"
 		stop_cpufreq_core
-		rm -rf "${DATA_DIR}"/blockmgr* "${DATA_DIR}"/spark-*
+		rm -rf "${SPARK_DATA_DIR}"/blockmgr* "${SPARK_DATA_DIR}"/spark-*
 		NUM_THREADS=$(( NUM_THREADS * 2 ))
-		sleep 10
+		sleep 20
 	done
 }
 
