@@ -34,6 +34,12 @@ TIMESTAMPS_FILE=${LOG_DIR}/Group_1P_2L.timestamps
 run_experiment "Group_1P_2L" "run_${WORKLOAD}" "${GROUP_1P_2L_CORES[@]}"
 
 ################################################################################################
+# Group_PP_LL: First physical cores from both CPUs, then logical cores from both CPUs.
+################################################################################################
+TIMESTAMPS_FILE=${LOG_DIR}/Group_PP_LL.timestamps
+run_experiment "Group_PP_LL" "run_${WORKLOAD}" "${GROUP_PP_LL_CORES[@]}"
+
+################################################################################################
 # Spread_P&L: Load by pairs switching CPUs. One pair (physical core + logical core) from CPU0, 
 # then from CPU1, then from CPU0...
 ################################################################################################

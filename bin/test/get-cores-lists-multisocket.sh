@@ -38,6 +38,17 @@ for ((OFFSET = 0; OFFSET <= PHY_CORES_PER_CPU; OFFSET += PHY_CORES_PER_CPU)); do
   done
 done
 
+export GROUP_PP_LL_CORES=()
+
+for LOGICAL_CORE in 0 1; do # First physical cores then logical cores
+  for ((CORE = 0; CORE < ${#CORES_DICT[@]}; CORE += 1)); do
+      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
+      if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
+        GROUP_PP_LL_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
+      fi
+  done
+done
+
 export SPREAD_P_AND_L_CORES=()
 
 for ((i = 0; i < (${#CORES_DICT[@]} / 2); i += 1)); do
