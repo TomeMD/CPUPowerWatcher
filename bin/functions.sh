@@ -223,12 +223,12 @@ function run_fio() {
 	MAX_THREADS=8
 	while [ "${NUM_THREADS}" -le "${MAX_THREADS}" ]
 	do
-	  FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS}"
+	  FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS} --runtime=30h --time_based"
 		set_n_cores ${NUM_THREADS}
 		start_cpufreq_core
 		print_timestamp "FIO (CORES = ${CURRENT_CORES}) START"
     if [ "${OS_VIRT}" == "docker" ]; then
-      docker run -d --rm --cpuset-cpus "${CURRENT_CORES}" --name fio -v "${FIO_TARGET}":/tmp fio ${FIO_OPTIONS}
+      docker run -d --rm --cpuset-cpus "${CURRENT_CORES}" --name fio -v "${FIO_TARGET}":/tmp ljishen/fio:latest ${FIO_OPTIONS}
     else
       sudo apptainer instance start --cpuset-cpus "${CURRENT_CORES}" -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio ${FIO_OPTIONS}
     fi
