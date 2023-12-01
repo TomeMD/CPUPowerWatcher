@@ -15,6 +15,7 @@ if [ "${ADD_IO_NOISE}" -ne 0 ]; then
   else
     sudo apptainer instance stop fio
   fi
+  rm -rf "${FIO_TARGET}"/fio_job*
 fi
 
 m_echo "Environment succesfully closed"

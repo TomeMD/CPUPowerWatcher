@@ -133,7 +133,9 @@ elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 	else
 		m_echo "Apache Spark was already downloaded"
 	fi
-elif [ "${WORKLOAD}" == "fio" ] || [ "${ADD_IO_NOISE}" -ne 0 ]; then # FIO
+fi
+
+if [ "${WORKLOAD}" == "fio" ] || [ "${ADD_IO_NOISE}" -ne 0 ]; then # FIO
   mkdir -p "${FIO_TARGET}"
   if [ "${OS_VIRT}" == "apptainer" ]; then
     if [ ! -f "${FIO_HOME}"/fio.sif ]; then
