@@ -10,10 +10,10 @@ fi
 
 if [ "${ADD_IO_NOISE}" -ne 0 ]; then
   if [ "${OS_VIRT}" == "docker" ]; then
-    docker stop fio
-    docker rm fio
+    docker stop fio_noise
+    docker rm fio_noise
   else
-    sudo apptainer instance stop fio
+    sudo apptainer instance stop fio_noise
   fi
   rm -rf "${FIO_TARGET}"/fio_job*
 fi

@@ -105,26 +105,11 @@ elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 
 elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 	if [ ! -d "${SPARK_HOME}" ]; then
-	  # Check Spark dependencies
+	  # Install Spark
 		m_echo "Downloading Apache Spark..."
-		if [ -z "${JAVA_HOME}" ]; then
-		  m_err "JAVA_HOME is not set"
-		  exit 1
-		fi
-    if [ -z "${PYTHON_HOME}" ]; then
-      m_err "Python 3 is not installed"
-      exit 1
-    fi
-    if [ ! -d "${SPARK_DATA_DIR}" ]; then
-      m_err "Specified Spark Data directory doesn't exist: ${SPARK_DATA_DIR}"
-      exit 1
-    fi
-
-		# Install Spark
 		wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
 		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz -C "${TOOLS_DIR}"
 		rm spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
-
     # Install smusket
     git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"
     sed -i 's/^MERGE_OUTPUT=.*/MERGE_OUTPUT=true/' "${SMUSKET_HOME}"/etc/smusket.conf

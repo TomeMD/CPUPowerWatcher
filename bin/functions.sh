@@ -16,7 +16,7 @@ export -f m_echo
 
 function m_err() {
     get_date
-    echo -e "\e[48;5;1m[$DATE ERR ]\e[0m $@" >&2
+    echo -e "\e[48;5;1m[$DATE ERR]\e[0m $@" >&2
     echo "$DATE > $@" >> "${LOG_FILE}"
 }
 

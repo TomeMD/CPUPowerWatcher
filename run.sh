@@ -7,6 +7,7 @@ export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
 . "${GLOBAL_HOME}"/bin/parse-arguments.sh
 . "${GLOBAL_HOME}"/bin/get-env.sh
 . "${BIN_DIR}"/functions.sh
+. "${BIN_DIR}"/check-arguments.sh
 
 # Build environment
 . "${BIN_DIR}"/build.sh
