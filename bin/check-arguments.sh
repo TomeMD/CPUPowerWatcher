@@ -2,17 +2,6 @@
 
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
 SUPPORTED=0
-for SUP_WORKLOAD in "${SUPPORTED_WORKLOADS[@]}"; do
-    if [ "${SUP_WORKLOAD}" = "${WORKLOAD}" ]; then
-        SUPPORTED=1
-        break
-    fi
-done
-
-if [ "${SUPPORTED}" -eq  "0" ]; then
-    m_err "Workload (${WORKLOAD}) not supported. Supported workloads [${SUPPORTED_WORKLOADS[*]}]"
-    exit 1
-fi
 
 if [ "${OS_VIRT}" != "docker" ] && [ "${OS_VIRT}" != "apptainer" ]; then
   m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Use 'docker' or 'apptainer'"
@@ -37,6 +26,18 @@ fi
 if [ "${SOCKETS}" -gt "2" ] ; then
   m_err "Number of sockets (${SOCKETS}) not supported. Number of sockets must be 1 or 2"
   exit 1
+fi
+
+for SUP_WORKLOAD in "${SUPPORTED_WORKLOADS[@]}"; do
+    if [ "${SUP_WORKLOAD}" = "${WORKLOAD}" ]; then
+        SUPPORTED=1
+        break
+    fi
+done
+
+if [ "${SUPPORTED}" -eq  "0" ]; then
+    m_err "Workload (${WORKLOAD}) not supported. Supported workloads [${SUPPORTED_WORKLOADS[*]}]"
+    exit 1
 fi
 
 if [ "${WORKLOAD}" == "spark" ]; then
