@@ -1,6 +1,6 @@
-# TSG_StressCPU
+# CROWDS: Collect CPU Time Series while Running Workloads
 
-Set of scripts to automate CPU monitoring and time series storage while running stress tests. Options:
+Set of scripts to automate CPU monitoring and time series storage while running workloads. Options:
 
 ````shell
 ~$ ./run.sh --help
