@@ -1,4 +1,4 @@
-# CROWDS: Collect CPU Time Series while Running Workloads
+# CPUPowerWatcher: Collect CPU Time Series while Running Workloads
 
 Set of scripts to automate CPU monitoring and time series storage while running workloads. Options:
 
