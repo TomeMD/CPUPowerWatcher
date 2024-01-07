@@ -2,6 +2,18 @@
 
 Set of scripts to automate CPU monitoring and time series storage while running workloads. Options:
 
+# Quickstart
+
+Update Git Submodules to get the necessary tools under the ./tool directory:
+
+```shell
+git submodule update --init --recursive
+```
+
+Then you can CPUPowerWatcher using `run.sh`.
+
+## Options
+
 ````shell
 ~$ ./run.sh --help
 
