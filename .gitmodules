@@ -1,6 +1,6 @@
-[submodule "tools/cpu_power_monitor"]
-	path = tools/cpu_power_monitor
-	url = git@github.com:TomeMD/cpu_power_monitor.git
+[submodule "tools/CPUCollector"]
+	path = tools/CPUCollector
+	url = git@github.com:TomeMD/CPUCollector.git
 [submodule "tools/stress-system"]
 	path = tools/stress-system
 	url = git@github.com:TomeMD/stress-system.git
