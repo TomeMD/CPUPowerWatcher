@@ -22,7 +22,7 @@ Usage: run.sh [OPTIONS]
                                 docker
                                 apptainer
   -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
-  -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: glances]
+  -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: public]
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
