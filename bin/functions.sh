@@ -117,6 +117,36 @@ function stop_cpufreq_core() {
 
 export -f stop_cpufreq_core
 
+function start_cpu_monitor() {
+	CPU_MONITOR_STARTED=0
+	while [ "${CPU_MONITOR_STARTED}" -eq 0 ]
+	do
+  		"${CPU_MONITOR_HOME}"/get-cpu-metrics.sh "${CURRENT_CORES}" "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" > /dev/null 2>&1 &
+  		CPU_MONITOR_PID=$!
+  		sleep 1
+  		if ps -p "${CPU_MONITOR_PID}" > /dev/null; then
+    			CPU_MONITOR_STARTED=1
+    			m_echo "CPU monitoring agent succesfully started. (PID = ${CPU_MONITOR_PID})"
+  		else
+    			m_err "Error while starting CPU monitoring agent. Trying again."
+  		fi
+	done
+}
+
+export -f start_cpu_monitor
+
+function stop_cpu_monitor() {
+  kill "${CPU_MONITOR_PID}" > /dev/null 2>&1
+
+  if ps -p "${CPU_MONITOR_PID}" > /dev/null; then
+     m_err "Error while killing CPU monitoring agent. (PID = ${CPU_MONITOR_PID})"
+  else
+     m_echo "CPU monitoring agent succesfully stopped. (PID = ${CPU_MONITOR_PID})"
+  fi
+}
+
+export -f stop_cpu_monitor
+
 function run_stress-system() {
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
@@ -259,6 +289,7 @@ export -f idle_cpu
 
 function run_seq_experiment() {
   TEST_FUNCTION=$1
+  CORE
   CURRENT_CORES="0"
   LOAD=50
 	while [ "${LOAD}" -le "100" ]; do
@@ -270,7 +301,130 @@ function run_seq_experiment() {
   done
 }
 
-export -f run_seq_experiment
+function get_container_pid_from_name() {
+  CONT_NAME=${1}
+  echo "$(sudo apptainer instance list ${CONT_NAME} | grep ${CONT_NAME} | awk '{print $2}')"
+}
+export -f get_container_pid_from_name
+
+function change_cont_cpu_affinity() {
+  CONTAINER_PID=${1}
+  CPU_AFFINITY=${2}
+  CGROUP_FILE_PATH="/sys/fs/cgroup/cpuset/system.slice/apptainer-${CONTAINER_PID}.scope/cpuset.cpus"
+  COMMAND="echo ${CPU_AFFINITY} >> ${CGROUP_FILE_PATH}"
+  sudo apptainer exec instance://cgroups_modifier bash -c "${COMMAND}"
+}
+
+export -f change_cont_cpu_affinity
+
+function change_cont_cpu_quota() {
+  CONTAINER_PID=${1}
+  CPU_QUOTA_US=${2}
+  CGROUP_FILE_PATH="/sys/fs/cgroup/cpuacct/system.slice/apptainer-${CONTAINER_PID}.scope/cpu.cfs_quota_us"
+  COMMAND="echo ${CPU_QUOTA} >> ${CGROUP_FILE_PATH}"
+  sudo apptainer exec instance://cgroups_modifier bash -c "${COMMAND}"
+}
+
+export -f change_cont_cpu_quota
+
+function cpu_percentage_to_quota() {
+  CONTAINER_PID=${1}
+  CPU_PERCENTAGE=${2}
+  CGROUP_FILE_PATH="/sys/fs/cgroup/cpuacct/system.slice/apptainer-${CONTAINER_PID}.scope/cpu.cfs_period_us"
+  CPU_PERIOD_US=$(< "${CGROUP_FILE_PATH}")
+  echo $(( CPU_PERCENTAGE * CPU_PERIOD_US / 100 ))
+}
+
+export -f cpu_percentage_to_quota
+
+function start_cgroups_modifier() {
+  CORE_TO_STRESS=${1}
+
+  # Start cgroups modifier
+  sudo apptainer instance start --bind /sys:/sys docker://debian:bullseye-slim cgroups_modifier
+
+  # Assign cgroups modifier container to another core (let the core to stress free)
+  CGROUPS_MODIFIER_PID=$(get_container_pid_from_name cgroups_modifier)
+  CGROUPS_MODIFIER_CORE=$(( (CORE_TO_STRESS + 3) % THREADS ))
+  change_cont_cpu_affinity "${CGROUPS_MODIFIER_PID}" "${CGROUPS_MODIFIER_CORE}"
+
+}
+
+export -f start_cgroups_modifier
+
+function stress_single_core() {
+  CONTAINER_NAME=${1}
+  CORE_TO_STRESS=${2}
+  COMMAND="/usr/local/bin/stress-system/run.sh ${OTHER_OPTIONS}-l 100 -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CORE_TO_STRESS} -t 4m -o /tmp/out"
+  print_timestamp "STRESS-TEST (CORES = ${CORE_TO_STRESS}) START"
+  sudo apptainer exec instance://"${CONTAINER_NAME}" bash -c "${COMMAND}" >> "${LOG_FILE}" 2>&1
+  print_timestamp "STRESS-TEST (CORES = ${CORE_TO_STRESS}) START"
+}
+
+export -f stress_single_core
+
+function incremental_core_stress() {
+  CONTAINER_NAME=${1}
+  CONTAINER_PID=${2}
+  CORE_TO_STRESS=${3}
+
+  LOAD=10
+	while [ "${LOAD}" -le "100" ]; do
+	  # Change stress container quota
+	  CPU_QUOTA=$(cpu_percentage_to_quota "${CONTAINER_PID}" "${LOAD}")
+	  change_cont_cpu_quota "${CONTAINER_PID}" "${CPU_QUOTA}"
+	  # Stress CPU core
+    stress_single_core "${CONTAINER_NAME}" "${CORE_TO_STRESS}"
+    # Leave CPU core idle for some seconds
+    idle_cpu
+    # Increase load
+    LOAD=$((LOAD + 10))
+  done
+
+}
+
+export -f incremental_core_stress
+
+function single_core_experiment() {
+  NAME="Single_Core"
+  PHYSICAL_CORE=${1}
+  LOGICAL_CORE=${2}
+
+  # Start instance to modify cgroups
+  start_cgroups_modifier "${PHYSICAL_CORE}"
+
+  # Start CPU monitor only once as it will monitor always the same cores
+  CURRENT_CORES="${PHYSICAL_CORE},${LOGICAL_CORE}"
+  start_cpu_monitor
+
+  # Start instance to stress physical core
+  sudo apptainer instance start "${STRESS_CONTAINER_DIR}"/stress.sif stress_physical
+  STRESS_CONTAINER_PID=$(get_container_pid_from_name stress)
+
+  # Incrementally stress physical core
+  incremental_core_stress "stress_physical" "${STRESS_CONTAINER_PID}" "${PHYSICAL_CORE}"
+
+  # Keep physical core at 100% to stress logical core
+  COMMAND="/usr/local/bin/stress-system/run.sh ${OTHER_OPTIONS}-l 100 -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CORE_TO_STRESS} -t 2h -o /tmp/out"
+  sudo apptainer exec instance://physical_stress bash -c "${COMMAND}" >> /dev/null 2>&1 &
+
+  # Start instance to stress logical core
+  sudo apptainer instance start "${STRESS_CONTAINER_DIR}"/stress.sif stress_logical
+  STRESS_CONTAINER_PID=$(get_container_pid_from_name stress)
+
+  # Incrementally stress logical core
+  incremental_core_stress "stress_logical" "${STRESS_CONTAINER_PID}" "${LOGICAL_CORE}"
+
+  # Stop frequency monitoring
+  stop_cpu_monitor
+
+  # Stop stress and cgroups modifier instances
+  sudo apptainer instance stop stress_physical
+  sudo apptainer instance stop stress_logical
+  sudo apptainer instance stop cgroups_modifier
+}
+
+export -f single_core_experiment
 
 function run_experiment() { 
 	NAME=$1

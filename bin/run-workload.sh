@@ -5,6 +5,9 @@ m_echo "Running ${WORKLOAD} tests..."
 if [ "${CUSTOM_TESTS}" -ne "0" ];then
   m_echo "Custom tests mode is active. Running custom tests from ${CUSTOM_TESTS_FILE}"
   . "${CUSTOM_TESTS_FILE}"
+elif [ "${SINGLE_CORE_MODE}" -ne "0" ]; then
+  m_echo "Single core mode is active. Running stress-system on 1 core (physical and logical)..."
+  . "${TEST_DIR}"/tests-singlecore.sh
 elif [ "${WORKLOAD}" == "npb" ]; then
   . "${TEST_DIR}"/npb-tests.sh
 elif [ "${WORKLOAD}" == "spark" ]; then

@@ -55,7 +55,18 @@ if [ "${WORKLOAD}" == "spark" ]; then
   fi
 fi
 
-if [ "${WORKLOAD}" == "fio" ] && [ "${ADD_IO_NOISE}" -ne 0 ]; then
+if [ "${WORKLOAD}" == "fio" ] && [ "${ADD_IO_NOISE}" -ne "0" ]; then
   m_warn "It's not consistent to use fio with I/O noise because both run fio"
   sleep 2
+fi
+
+if [ "${SINGLE_CORE_MODE}" -ne "0" ]; then
+  if [ "${WORKLOAD}" != "stress-system" ]; then
+    m_err "Single core mode is not supported for workload ${WORKLOAD}. Use stress-system instead."
+    exit 1
+  fi
+  if [ "${OS_VIRT}" != "apptainer" ]; then
+    m_err "Single core mode is not supported for ${OS_VIRT}. Use apptainer instead."
+    exit 1
+  fi
 fi

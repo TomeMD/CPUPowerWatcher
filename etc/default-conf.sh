@@ -1,5 +1,6 @@
 export LOG_DIR="${GLOBAL_HOME}"/log
 export OS_VIRT="docker"
+export SINGLE_CORE_MODE=0
 export WORKLOAD="stress-system"
 export STRESSORS="cpu"
 export LOAD_TYPES="all"

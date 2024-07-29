@@ -8,6 +8,8 @@ Usage: $(basename "$0") [OPTIONS]
                                 apptainer
   -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
   -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: public]
+  -s, --single-core         Single core mode. Stress only one core (physical and logical) incrementally. This mode only
+                            supports stress-system as workload and apptainer as OS-level virtualization technology.
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
@@ -53,6 +55,10 @@ while [[ $# -gt 0 ]]; do
     -b|--influxdb-bucket)
       INFLUXDB_BUCKET="$2"
       shift 2
+      ;;
+    -s|--single-core)
+      SINGLE_CORE_MODE=1
+      shift 1
       ;;
     -w|--workload)
       WORKLOAD="$2"
