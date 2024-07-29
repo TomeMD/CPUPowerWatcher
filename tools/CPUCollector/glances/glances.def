@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: nicolargo/glances:latest-full
+
+%files
+	start-glances.sh /usr/local/bin/
+
+%startscript
+	/usr/local/bin/start-glances.sh "$@"
+
+%runscript
+	/usr/local/bin/start-glances.sh "$@"
