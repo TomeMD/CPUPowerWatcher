@@ -450,6 +450,15 @@ _rapl_init_component( int cidx )
 			different_units=0;
 			break;
 
+		case 151:	/* AlderLake-S */
+			package_avail=1;
+			pp0_avail=1;
+			pp1_avail=1;
+			dram_avail=1;
+			psys_avail=1;
+			different_units=1;
+			break;
+
 		/* Server Class Machines */
 
 		case 45:	/* SandyBridge-EP */
