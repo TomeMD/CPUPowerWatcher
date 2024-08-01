@@ -68,8 +68,8 @@ int main (int argc, char **argv) {
     /* PAPI Initialization */
     retval = PAPI_library_init( PAPI_VER_CURRENT );
     if ( retval != PAPI_VER_CURRENT ) {
-	fprintf(stderr, "PAPI_library_init failed\n");
-	exit(-1);
+        fprintf(stderr, "PAPI_library_init failed\n");
+        exit(-1);
     }
 
     numcmp = PAPI_num_components();
@@ -94,67 +94,66 @@ int main (int argc, char **argv) {
 
     /* Component not found */
     if (cid == numcmp) {
- 	fprintf(stderr, "Error! No RAPL component found!\n");
-	exit(1);
+        fprintf(stderr, "Error! No RAPL component found!\n");
+        exit(1);
     }
 
     /* Find Events */
     code = PAPI_NATIVE_MASK;
     enum_retval = PAPI_enum_cmp_event(&code, PAPI_ENUM_FIRST, cid);
-
     while (enum_retval == PAPI_OK) {
-	retval = PAPI_event_code_to_name(code, event_name);
-	if (retval != PAPI_OK) {
-		fprintf(stderr, "Error translating %#x\n", code);
-		exit(-1);
-	}
+        retval = PAPI_event_code_to_name(code, event_name);
+        if (retval != PAPI_OK) {
+            fprintf(stderr, "Error translating %#x\n", code);
+            exit(-1);
+	    }
 
-	printf("Found event: %s\n", event_name);
+        printf("Found event: %s\n", event_name);
 
-	if (strstr(event_name, "ENERGY") != NULL && strstr(event_name, "ENERGY_CNT") == NULL) {
-		strncpy(events[num_events], event_name, BUFSIZ);
+        if (strstr(event_name, "ENERGY") != NULL && strstr(event_name, "ENERGY_CNT") == NULL) {
+            strncpy(events[num_events], event_name, BUFSIZ);
 
-	 	/* Find additional event information: unit, data type */
-	        retval = PAPI_get_event_info(code, &evinfo);
-            	if (retval != PAPI_OK) {
-                	fprintf(stderr, "Error getting event info for %#x\n", code);
-	                exit(-1);
-        	}
+            /* Find additional event information: unit, data type */
+            retval = PAPI_get_event_info(code, &evinfo);
+            if (retval != PAPI_OK) {
+                fprintf(stderr, "Error getting event info for %#x\n", code);
+                exit(-1);
+            }
 
-            	strncpy(units[num_events],evinfo.units,sizeof(units[0])-1);
-            	/* buffer must be null terminated to safely use strstr operation on it below */
-            	units[num_events][sizeof(units[0])-1] = '\0';
+            strncpy(units[num_events], evinfo.units, sizeof(units[0])-1);
+            /* buffer must be null terminated to safely use strstr operation on it below */
+            units[num_events][sizeof(units[0])-1] = '\0';
 
-            	num_events++;
+            num_events++;
 
-            	if (num_events == MAX_EVENTS) {
-                	fprintf(stderr, "Too many events! %d\n", num_events);
-	                exit(-1);
-            	}
+            if (num_events == MAX_EVENTS) {
+                fprintf(stderr, "Too many events! %d\n", num_events);
+                exit(-1);
+            }
         }
 
-	enum_retval = PAPI_enum_cmp_event(&code, PAPI_ENUM_EVENTS, cid);
+        enum_retval = PAPI_enum_cmp_event(&code, PAPI_ENUM_EVENTS, cid);
     }
 
     if (num_events == 0) {
     	fprintf(stderr, "Error! No RAPL events found!\n");
-	exit(-1);
+        exit(-1);
     }
 
     /* Create EventSet */
     retval = PAPI_create_eventset(&EventSet);
     if (retval != PAPI_OK) {
-	fprintf(stderr, "Error creating EventSet\n");
+        fprintf(stderr, "Error creating EventSet\n");
         exit(-1);
     }
 
     for (i=0; i<num_events; i++) {
-	printf("Saved event: %s\n", events[i]);
-	retval = PAPI_add_named_event(EventSet, events[i]);
-	if (retval != PAPI_OK) {
-		fprintf(stderr, "Error adding event %s\n", events[i]);
-        	exit(-1);
-	}
+        printf("Saved event: %s\n", events[i]);
+        retval = PAPI_add_named_event(EventSet, events[i]);
+        if (retval != PAPI_OK) {
+            fprintf(stderr, "Error adding event %s\n", events[i]);
+                exit(-1);
+        }
     }
 
     retval = gethostname(hostname, sizeof(hostname));
@@ -165,6 +164,7 @@ int main (int argc, char **argv) {
     snprintf(host_tag, sizeof(host_tag), "host=%s", hostname);
 
     // Create InfluxDB Client
+    ic_debug(0);
     ic_influx_database(influxdb_host, 8086, influxdb_bucket, "MyOrg", "MyToken");
     ic_tags(host_tag);
 
@@ -181,35 +181,36 @@ int main (int argc, char **argv) {
 
     /* Main loop */
     while (1) {
-	/* Start counting */
-	before_time=PAPI_get_real_nsec();
-	retval = PAPI_start(EventSet);
-	if (retval != PAPI_OK) {
-		fprintf(stderr, "PAPI_start() failed\n");
-		exit(-1);
-	}
 
-	usleep(microseconds_interval);
+        /* Start counting */
+        before_time=PAPI_get_real_nsec();
+        retval = PAPI_start(EventSet);
+        if (retval != PAPI_OK) {
+            fprintf(stderr, "PAPI_start() failed\n");
+            exit(-1);
+        }
 
-	/* Stop counting */
-	after_time=PAPI_get_real_nsec();
-	retval = PAPI_stop(EventSet, values);
-	if (retval != PAPI_OK) {
-		fprintf(stderr, "PAPI_stop() failed\n");
-           		exit(-1);
-	}
+        usleep(microseconds_interval);
 
-	total_time=((double)(after_time-start_time))/1.0e9;
-	elapsed_time=((double)(after_time-before_time))/1.0e9;
+        /* Stop counting */
+        after_time=PAPI_get_real_nsec();
+        retval = PAPI_stop(EventSet, values);
+        if (retval != PAPI_OK) {
+            fprintf(stderr, "PAPI_stop() failed\n");
+            exit(-1);
+        }
+
+        total_time=((double)(after_time-start_time))/1.0e9;
+        elapsed_time=((double)(after_time-before_time))/1.0e9;
 
         energy_pkg0 = 0;
         energy_pkg1 = 0;
-	energy_pp0_pkg0 = 0;
+        energy_pp0_pkg0 = 0;
         energy_pp0_pkg1 = 0;
 
         for (i=0; i<num_events; i++) {
-            /* Energy consumption is returned in nano-Joules (nJ) */
 
+            /* Energy consumption is returned in nano-Joules (nJ) */
             energy = ((double)values[i] / 1.0e9);
             power = energy / elapsed_time;
 
@@ -221,8 +222,8 @@ int main (int argc, char **argv) {
             //printf("events[%i]=%s, values[%i]=%lli\n", i, events[i], i, values[i]);
             //printf("Energy %.3f, Power %.3f\n", energy, power);
 
-	    if (energy == 0)
-		continue;
+            if (energy == 0)
+                continue;
 
             if (strstr(events[i], "DRAM_")) {
                 strcpy(measure_energy, "ENERGY_DRAM");
@@ -230,67 +231,64 @@ int main (int argc, char **argv) {
             } else if (strstr(events[i], "PP0_")) {
                 strcpy(measure_energy, "ENERGY_PP0");
                 strcpy(measure_power, "POWER_PP0");
-                 if (strstr(events[i], "PACKAGE0")) {
-                         energy_pp0_pkg0 = energy;
-                         power_pp0_pkg0 = power;
-                 } else if (strstr(events[i], "PACKAGE1")) {
-        	         energy_pp0_pkg1 = energy;
-	                 power_pp0_pkg1 = power;
-                 }
+                if (strstr(events[i], "PACKAGE0")) {
+                    energy_pp0_pkg0 = energy;
+                    power_pp0_pkg0 = power;
+                } else if (strstr(events[i], "PACKAGE1")) {
+                    energy_pp0_pkg1 = energy;
+                    power_pp0_pkg1 = power;
+                }
             } else if (strstr(events[i], "PP1_")) {
                 strcpy(measure_energy, "ENERGY_PP1");
                 strcpy(measure_power, "POWER_PP1");
-	    } else if (strstr(events[i], "PSYS_")) {
+            } else if (strstr(events[i], "PSYS_")) {
                 strcpy(measure_energy, "ENERGY_PSYS");
                 strcpy(measure_power, "POWER_PSYS");
             } else if (strstr(events[i], "PACKAGE_")) {
                 strcpy(measure_energy, "ENERGY_PACKAGE");
                 strcpy(measure_power, "POWER_PACKAGE");
                 if (strstr(events[i], "PACKAGE0")) {
-                        energy_pkg0 = energy;
-                        power_pkg0 = power;
+                    energy_pkg0 = energy;
+                    power_pkg0 = power;
                 } else if (strstr(events[i], "PACKAGE1")) {
-                        energy_pkg1 = energy;
-                	power_pkg1 = power;
+                    energy_pkg1 = energy;
+                    power_pkg1 = power;
                 }
             } else {
                 fprintf(stderr, "Error! Unexpected event %s found!\n", events[i]);
-	    }
+            }
 
             ic_measure(measure_energy);
-                ic_double(column_joules, energy);
+            ic_double(column_joules, energy);
             ic_measureend();
             ic_measure(measure_power);
-                ic_double(column_watts, power);
+            ic_double(column_watts, power);
             ic_measureend();
-            ic_push(); // Send metrics to InfluxDB
-	}
+	    }
 
-	if (energy_pp0_pkg0 != 0) {
-	    //printf("energy_pkg0 %.3f, energy_pp0_pkg0 %.3f\n", energy_pkg0, energy_pp0_pkg0);
+        if (energy_pp0_pkg0 != 0) {
+            //printf("energy_pkg0 %.3f, energy_pp0_pkg0 %.3f\n", energy_pkg0, energy_pp0_pkg0);
             ic_measure("UNCORE_ENERGY_PACKAGE");
-                ic_double("UNCORE_ENERGY:PACKAGE0(J)", energy_pkg0 - energy_pp0_pkg0);
+            ic_double("UNCORE_ENERGY:PACKAGE0(J)", energy_pkg0 - energy_pp0_pkg0);
             ic_measureend();
 
             ic_measure("UNCORE_POWER_PACKAGE");
-                ic_double("UNCORE_POWER:PACKAGE0(W)", power_pkg0 - power_pp0_pkg0);
+            ic_double("UNCORE_POWER:PACKAGE0(W)", power_pkg0 - power_pp0_pkg0);
             ic_measureend();
-
-            ic_push();
         }
 
         if (energy_pp0_pkg1 != 0) {
-	    //printf("energy_pkg1 %.3f, energy_pp0_pkg1 %.3f\n", energy_pkg1, energy_pp0_pkg1);
+            //printf("energy_pkg1 %.3f, energy_pp0_pkg1 %.3f\n", energy_pkg1, energy_pp0_pkg1);
             ic_measure("UNCORE_ENERGY_PACKAGE");
-                ic_double("UNCORE_ENERGY:PACKAGE1(J)", energy_pkg1 - energy_pp0_pkg1);
+            ic_double("UNCORE_ENERGY:PACKAGE1(J)", energy_pkg1 - energy_pp0_pkg1);
             ic_measureend();
 
             ic_measure("UNCORE_POWER_PACKAGE");
-                ic_double("UNCORE_POWER:PACKAGE1(W)", power_pkg1 - power_pp0_pkg1);
+            ic_double("UNCORE_POWER:PACKAGE1(W)", power_pkg1 - power_pp0_pkg1);
             ic_measureend();
-
-            ic_push();
         }
+
+        ic_push(); // Send metrics to InfluxDB
 
         if (max_time > 0 && total_time >= max_time)
             break;

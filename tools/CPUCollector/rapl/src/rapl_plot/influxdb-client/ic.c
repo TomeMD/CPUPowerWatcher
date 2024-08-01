@@ -32,7 +32,7 @@
 #define DEBUG   if(debug)
 #define MEGABYTE ( 1024 * 1024 ) /* USed as the default buffer sizes */
 
-int debug = 1; /* 0=off, 1=on basic, 2=trace like output */
+int debug = 0; /* 0=off, 1=on basic, 2=trace like output */
 
 char influx_hostname[1024 + 1] = { 0 };/* details of the influxdb server or telegraf */
 char influx_ip[16 + 1] = { 0 };
