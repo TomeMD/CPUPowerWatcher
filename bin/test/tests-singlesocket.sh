@@ -9,22 +9,22 @@ sleep 30
 START=$(date +%s%N)
 
 ################################################################################################
-# Only_P: Only physical cores in order
+# Group_P: Only physical cores.
 ################################################################################################
-TIMESTAMPS_FILE=${LOG_DIR}/Only_P.timestamps
-run_experiment "Only_P" "run_${WORKLOAD}" "${ONLY_P_CORES[@]}"
+TIMESTAMPS_FILE=${LOG_DIR}/Group_P.timestamps
+run_experiment "Group_P" "run_${WORKLOAD}" "${GROUP_P_CORES[@]}"
 
 ################################################################################################
-# Test_P&L: Load by pairs of physical and logical cores
+# Group_P&L: Pairs of physical and logical cores.
 ################################################################################################
-TIMESTAMPS_FILE=${LOG_DIR}/Test_P_and_L.timestamps
-run_experiment "Test_P&L" "run_${WORKLOAD}" "${TEST_P_AND_L_CORES[@]}"
+TIMESTAMPS_FILE=${LOG_DIR}/Group_P_and_L.timestamps
+run_experiment "Group_P&L" "run_${WORKLOAD}" "${GROUP_P_AND_L_CORES[@]}"
 
 ################################################################################################
-# Test_1P_2L: First physical cores, then logical cores.
+# Group_1P_2L: Physical cores first, then logical cores.
 ################################################################################################
-TIMESTAMPS_FILE=${LOG_DIR}/Test_1P_2L.timestamps
-run_experiment "Test_1P_2L" "run_${WORKLOAD}" "${TEST_1P_2L_CORES[@]}"
+TIMESTAMPS_FILE=${LOG_DIR}/Group_1P_2L.timestamps
+run_experiment "Group_1P_2L" "run_${WORKLOAD}" "${GROUP_1P_2L_CORES[@]}"
 
 ################################################################################################
 END=$(date +%s%N)

@@ -2,35 +2,54 @@
 
 export GROUP_P_CORES=()
 
-for ((CORE = 0; CORE < ${#CORES_DICT[@]}; CORE += 1)); do
-    IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
-    GROUP_P_CORES+=("${LOGICAL_CORES[0]}")
+for SOCKET in 0 1; do
+  for (( CORE = ${FIRST_CORE_SOCKET[$SOCKET]}; CORE < $(( ${FIRST_CORE_SOCKET[$SOCKET]} + PHY_CORES_PER_CPU )); CORE += 1)); do
+      KEY="${SOCKET}:${CORE}"
+      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
+      if [ -n "${LOGICAL_CORES[0]}" ];then
+        GROUP_P_CORES+=("${LOGICAL_CORES[0]}")
+      fi
+  done
 done
 
 export SPREAD_P_CORES=()
 
-for ((i = 0; i < (${#CORES_DICT[@]} / 2); i += 2)); do
-    for CORE in $i $((i + 1)) $((i + PHY_CORES_PER_CPU)) $((i + PHY_CORES_PER_CPU + 1)); do
-      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
-      SPREAD_P_CORES+=("${LOGICAL_CORES[0]}")
+for (( CORE = 0; CORE < PHY_CORES_PER_CPU; CORE += 2)); do
+  for SOCKET in 0 1; do
+    CORE_SOCKET_1=$(( ${FIRST_CORE_SOCKET[$SOCKET]} + CORE ))
+    CORE_SOCKET_2=$(( CORE_SOCKET_1 + 1 ))
+    KEY_1="${SOCKET}:${CORE_SOCKET_1}"
+    KEY_2="${SOCKET}:${CORE_SOCKET_2}"
+    for KEY in "${KEY_1}" "${KEY_2}"; do
+      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
+      if [ -n "${LOGICAL_CORES[0]}" ];then
+        SPREAD_P_CORES+=("${LOGICAL_CORES[0]}")
+      fi
     done
+  done
 done
 
 export GROUP_P_AND_L_CORES=()
 
-for ((CORE = 0; CORE < ${#CORES_DICT[@]}; CORE += 1)); do
-    IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
-    GROUP_P_AND_L_CORES+=("${LOGICAL_CORES[0]}")
-    if [ -n "${LOGICAL_CORES[1]}" ];then
-      GROUP_P_AND_L_CORES+=("${LOGICAL_CORES[1]}")
-    fi
+for SOCKET in 0 1; do
+  for (( CORE = ${FIRST_CORE_SOCKET[$SOCKET]}; CORE < $(( ${FIRST_CORE_SOCKET[$SOCKET]} + PHY_CORES_PER_CPU )); CORE += 1)); do
+      KEY="${SOCKET}:${CORE}"
+      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
+      for LOGICAL_CORE in 0 1;do
+        if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
+          GROUP_P_AND_L_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
+        fi
+      done
+  done
 done
 
 export GROUP_1P_2L_CORES=()
-for ((OFFSET = 0; OFFSET <= PHY_CORES_PER_CPU; OFFSET += PHY_CORES_PER_CPU)); do # First CPU0 then CPU1
-  for LOGICAL_CORE in 0 1; do # First physical cores then logical cores
-    for ((CORE = OFFSET; CORE < (OFFSET + PHY_CORES_PER_CPU); CORE += 1)); do
-        IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
+
+for SOCKET in 0 1; do
+  for LOGICAL_CORE in 0 1;do
+    for (( CORE = ${FIRST_CORE_SOCKET[$SOCKET]}; CORE < $(( ${FIRST_CORE_SOCKET[$SOCKET]} + PHY_CORES_PER_CPU )); CORE += 1)); do
+        KEY="${SOCKET}:${CORE}"
+        IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
         if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
           GROUP_1P_2L_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
         fi
@@ -40,23 +59,48 @@ done
 
 export GROUP_PP_LL_CORES=()
 
-for LOGICAL_CORE in 0 1; do # First physical cores then logical cores
-  for ((CORE = 0; CORE < ${#CORES_DICT[@]}; CORE += 1)); do
-      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
-      if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
-        GROUP_PP_LL_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
-      fi
+for LOGICAL_CORE in 0 1;do
+  for SOCKET in 0 1; do
+    for (( CORE = ${FIRST_CORE_SOCKET[$SOCKET]}; CORE < $(( ${FIRST_CORE_SOCKET[$SOCKET]} + PHY_CORES_PER_CPU )); CORE += 1)); do
+        KEY="${SOCKET}:${CORE}"
+        IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
+        if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
+          GROUP_PP_LL_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
+        fi
+    done
   done
 done
 
 export SPREAD_P_AND_L_CORES=()
 
-for ((i = 0; i < (${#CORES_DICT[@]} / 2); i += 1)); do
-    for CORE in $i $((i + PHY_CORES_PER_CPU)); do
-      IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[$CORE]}"
-      SPREAD_P_AND_L_CORES+=("${LOGICAL_CORES[0]}")
-      if [ -n "${LOGICAL_CORES[1]}" ];then
-        SPREAD_P_AND_L_CORES+=("${LOGICAL_CORES[1]}")
+for (( CORE = 0; CORE < PHY_CORES_PER_CPU; CORE += 1)); do
+  for SOCKET in 0 1; do
+    CORE_SOCKET=$(( ${FIRST_CORE_SOCKET[$SOCKET]} + CORE ))
+    KEY="${SOCKET}:${CORE_SOCKET}"
+    IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
+    for LOGICAL_CORE in 0 1; do
+      if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
+        SPREAD_P_AND_L_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
       fi
     done
+  done
+done
+
+export SPREAD_PP_LL_CORES=()
+
+for LOGICAL_CORE in 0 1; do
+  for (( CORE = 0; CORE < PHY_CORES_PER_CPU; CORE += 2)); do
+    for SOCKET in 0 1; do
+      CORE_SOCKET_1=$(( ${FIRST_CORE_SOCKET[$SOCKET]} + CORE ))
+      CORE_SOCKET_2=$(( CORE_SOCKET_1 + 1 ))
+      KEY_1="${SOCKET}:${CORE_SOCKET_1}"
+      KEY_2="${SOCKET}:${CORE_SOCKET_2}"
+      for KEY in "${KEY_1}" "${KEY_2}"; do
+        IFS=',' read -ra LOGICAL_CORES <<< "${CORES_DICT[${KEY}]}"
+        if [ -n "${LOGICAL_CORES[${LOGICAL_CORE}]}" ];then
+          SPREAD_PP_LL_CORES+=("${LOGICAL_CORES[${LOGICAL_CORE}]}")
+        fi
+      done
+    done
+  done
 done

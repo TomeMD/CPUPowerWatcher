@@ -9,42 +9,46 @@ sleep 30
 START=$(date +%s%N)
 
 ################################################################################################
-# Group_P: First CPU0 physical cores, then CPU1 physical cores
+# Group_P: Only physical cores, one CPU at a time.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Group_P.timestamps
 run_experiment "Group_P" "run_${WORKLOAD}" "${GROUP_P_CORES[@]}"
 
 ################################################################################################
-# Spread_P: Switching CPU cores, 2 cores from CPU0, then 2 cores from CPU1, then 2 from CPU0...
+# Spread_P: Only physical cores, alternating between CPUs.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Spread_P.timestamps
 run_experiment "Spread_P" "run_${WORKLOAD}" "${SPREAD_P_CORES[@]}"
 
 ################################################################################################
-# Group_P&L: Load by pairs of physical and logical cores, first CPU0, then CPU1.
+# Group_P&L: Pairs of physical and logical cores, one CPU at a time.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Group_P_and_L.timestamps
 run_experiment "Group_P&L" "run_${WORKLOAD}" "${GROUP_P_AND_L_CORES[@]}"
 
 ################################################################################################
-# Group_1P_2L: First physical cores, then logical cores. First load CPU0 until all physical and 
-# logical cores are loaded at 100%, then do the same with CPU1.
+# Group_1P_2L: Physical cores first, then logical cores, one CPU at a time.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Group_1P_2L.timestamps
 run_experiment "Group_1P_2L" "run_${WORKLOAD}" "${GROUP_1P_2L_CORES[@]}"
 
 ################################################################################################
-# Group_PP_LL: First physical cores from both CPUs, then logical cores from both CPUs.
+# Group_PP_LL: Physical cores first, one CPU at a time, then logical cores.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Group_PP_LL.timestamps
 run_experiment "Group_PP_LL" "run_${WORKLOAD}" "${GROUP_PP_LL_CORES[@]}"
 
 ################################################################################################
-# Spread_P&L: Load by pairs switching CPUs. One pair (physical core + logical core) from CPU0, 
-# then from CPU1, then from CPU0...
+# Spread_P&L: Pairs of physical and logical cores, alternating between CPUs.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Spread_P_and_L.timestamps
 run_experiment "Spread_P&L" "run_${WORKLOAD}" "${SPREAD_P_AND_L_CORES[@]}"
+
+################################################################################################
+# Spread_PP_LL: Physical cores first, alternating between CPUs, then logical cores.
+################################################################################################
+TIMESTAMPS_FILE=${LOG_DIR}/Spread_PP_LL.timestamps
+run_experiment "Spread_PP_LL" "run_${WORKLOAD}" "${SPREAD_PP_LL_CORES[@]}"
 
 ################################################################################################
 END=$(date +%s%N)
