@@ -207,7 +207,7 @@ int main (int argc, char **argv) {
         energy_pkg1 = 0;
         energy_pp0_pkg0 = 0;
         energy_pp0_pkg1 = 0;
-
+        events_to_send = 0;
         for (i=0; i<num_events; i++) {
 
             /* Energy consumption is returned in nano-Joules (nJ) */
@@ -264,6 +264,8 @@ int main (int argc, char **argv) {
             ic_measure(measure_power);
             ic_double(column_watts, power);
             ic_measureend();
+
+            events_to_send += 1;
 	    }
 
         if (energy_pp0_pkg0 != 0) {
@@ -275,6 +277,8 @@ int main (int argc, char **argv) {
             ic_measure("UNCORE_POWER_PACKAGE");
             ic_double("UNCORE_POWER:PACKAGE0(W)", power_pkg0 - power_pp0_pkg0);
             ic_measureend();
+
+            events_to_send += 1;
         }
 
         if (energy_pp0_pkg1 != 0) {
@@ -286,9 +290,12 @@ int main (int argc, char **argv) {
             ic_measure("UNCORE_POWER_PACKAGE");
             ic_double("UNCORE_POWER:PACKAGE1(W)", power_pkg1 - power_pp0_pkg1);
             ic_measureend();
+
+            events_to_send += 1;
         }
 
-        ic_push(); // Send metrics to InfluxDB
+        if (events_to_send)
+            ic_push(); // Send metrics to InfluxDB
 
         if (max_time > 0 && total_time >= max_time)
             break;
