@@ -1,5 +1,5 @@
 export LOG_DIR="${GLOBAL_HOME}"/log
-export OS_VIRT="docker"
+export OS_VIRT="apptainer"
 export SINGLE_CORE_MODE=0
 export WORKLOAD="stress-system"
 export STRESSORS="cpu"
@@ -9,7 +9,7 @@ export INFLUXDB_HOST="montoxo.des.udc.es"
 export INFLUXDB_BUCKET="public"
 export GEEKBENCH_VERSION="5.4.1"
 export SPARK_VERSION="3.3.3"
-export CORE_CPUFREQ_PID=0
+export GET_BASE_MEASUREMENTS=0
 export ADD_IO_NOISE=0
 export FIO_TARGET=/tmp/fio
 export SPARK_DATA_DIR="${GLOBAL_HOME}"/data

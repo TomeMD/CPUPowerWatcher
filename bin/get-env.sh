@@ -10,7 +10,6 @@ export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
 # CPUCollector
 export GLANCES_HOME="${TOOLS_DIR}"/CPUCollector/glances
 export CPU_MONITOR_HOME="${TOOLS_DIR}"/CPUCollector/cpumetrics
-export CPUFREQ_HOME="${TOOLS_DIR}"/CPUCollector/cpufreq
 export RAPL_HOME="${TOOLS_DIR}"/CPUCollector/rapl
 
 # stress-system

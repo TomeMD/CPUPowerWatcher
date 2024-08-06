@@ -6,12 +6,6 @@ m_echo "Building monitoring environment"
 
 # Build monitoring environment
 if [ "${OS_VIRT}" == "docker" ]; then
-  if [ -z "$(docker image ls -q glances)" ]; then
-    m_echo "Building Glances..."
-    docker build -t glances "${GLANCES_HOME}"
-  else
-    m_echo "Glances image already exists. Skipping build."
-  fi
   if [ -z "$(docker image ls -q rapl)" ]; then
     m_echo "Building RAPL..."
     docker build -t rapl "${RAPL_HOME}"
@@ -19,12 +13,6 @@ if [ "${OS_VIRT}" == "docker" ]; then
     m_echo "RAPL image already exists. Skipping build."
   fi
 elif [ "${OS_VIRT}" == "apptainer" ]; then
-  if [ ! -f "${GLANCES_HOME}"/glances.sif ]; then
-    m_echo "Building Glances..."
-    cd "${GLANCES_HOME}" && apptainer build -F glances.sif glances.def
-  else
-    m_echo "Glances image already exists. Skipping build."
-  fi
   if [ ! -f "${RAPL_HOME}"/rapl.sif ]; then
     m_echo "Building RAPL..."
     cd "${RAPL_HOME}" && apptainer build -F rapl.sif rapl.def
@@ -32,8 +20,8 @@ elif [ "${OS_VIRT}" == "apptainer" ]; then
     m_echo "RAPL image already exists. Skipping build."
   fi
 fi
-chmod +x "${CPUFREQ_HOME}"/get-freq-core.sh
 
+chmod +x "${CPU_MONITOR_HOME}"/get-cpu-metrics.sh
 
 # Compile workloads
 if [ "${WORKLOAD}" == "stress-system" ]; then # STRESS-SYSTEM
@@ -106,15 +94,15 @@ elif [ "${WORKLOAD}" == "geekbench" ]; then # GEEKBENCH
 elif [ "${WORKLOAD}" == "spark" ]; then # APACHE SPARK
 	if [ ! -d "${SPARK_HOME}" ]; then
 	  # Install Spark
-		m_echo "Downloading Apache Spark..."
-		wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
-		tar -xf spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz -C "${TOOLS_DIR}"
-		rm spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
-    # Install smusket
-    git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"
-    sed -i 's/^MERGE_OUTPUT=.*/MERGE_OUTPUT=true/' "${SMUSKET_HOME}"/etc/smusket.conf
-    sed -i 's/^SERIALIZED_RDD=.*/SERIALIZED_RDD=false/' "${SMUSKET_HOME}"/etc/smusket.conf
-    sed -i 's/^HDFS_BASE_PATH=.*/HDFS_BASE_PATH=\/scratch\/ssd/' "${SMUSKET_HOME}"/etc/smusket.conf
+      m_echo "Downloading Apache Spark..."
+      wget https://dlcdn.apache.org/spark/spark-"${SPARK_VERSION}"/spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
+      tar -xf spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz -C "${TOOLS_DIR}"
+      rm spark-"${SPARK_VERSION}"-bin-hadoop"${SPARK_VERSION:0:1}".tgz
+      # Install SMusket
+      git clone https://github.com/UDC-GAC/smusket.git "${SMUSKET_HOME}"
+      sed -i 's/^MERGE_OUTPUT=.*/MERGE_OUTPUT=true/' "${SMUSKET_HOME}"/etc/smusket.conf
+      sed -i 's/^SERIALIZED_RDD=.*/SERIALIZED_RDD=false/' "${SMUSKET_HOME}"/etc/smusket.conf
+      sed -i 's/^HDFS_BASE_PATH=.*/HDFS_BASE_PATH=\/scratch\/ssd/' "${SMUSKET_HOME}"/etc/smusket.conf
 	else
 		m_echo "Apache Spark was already downloaded"
 	fi
