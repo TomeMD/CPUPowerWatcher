@@ -148,14 +148,33 @@ function stop_cpu_monitor() {
 export -f stop_cpu_monitor
 
 function run_stress-system() {
+    local CPU_QUOTA=$(echo "scale=2; ${LOAD} / 100 " | bc)
+    local STRESS_TIME=120
+
+    # Stress-system does weird things when we specify LOAD < 100 (in this case load is adjusted with CPU quota)
+    local OLD_LOAD="${LOAD}"
+    if [ "${LOAD}" -lt "100" ];then
+      LOAD=100
+    fi
+
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t 4m >> "${LOG_FILE}" 2>&1
+		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t "${STRESS_TIME}" >> "${LOG_FILE}" 2>&1
 	else
-		apptainer run "${STRESS_CONTAINER_DIR}"/stress.sif ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t 4m >> "${LOG_FILE}" 2>&1
+		sudo apptainer instance start -B /scratch2:/scratch2 --cpuset-cpus "${CURRENT_CORES}" --cpus "${CPU_QUOTA}" "${STRESS_CONTAINER_DIR}"/stress.sif stress_system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t "${STRESS_TIME}" >> "${LOG_FILE}" 2>&1
+	fi
+
+	sleep "${STRESS_TIME}"
+
+	if [ "${OS_VIRT}" == "apptainer" ]; then
+		sudo apptainer instance stop stress_system
 	fi
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) STOP"
-	sleep 15
+
+	# Reset LOAD to its original value
+	LOAD="${OLD_LOAD}"
+
+	sleep 20
 }
 
 export -f run_stress-system
@@ -288,16 +307,33 @@ function idle_cpu() {
 export -f idle_cpu
 
 function run_seq_experiment() {
-  TEST_FUNCTION=$1
-  CURRENT_CORES="0"
-  LOAD=50
+  NAME=$1
+  TEST_FUNCTION=$2
+  CURRENT_CORES=$3
+
+  local START_TEST=$(date +%s%N)
+
+  # Start monitoring agent and move to current core
+  start_cpu_monitor
+  if [ -n "${CPU_MONITOR_PID}" ]; then
+    taskset -cp "${CURRENT_CORES}" "${CPU_MONITOR_PID}"
+    m_echo "Changed CPU monitor (pid = ${CPU_MONITOR_PID}) affinity to core ${CURRENT_CORES}"
+  fi
+
+  # Incrementally stress core
+  LOAD=10
   while [ "${LOAD}" -le "100" ]; do
-      start_cpu_monitor
-      "${TEST_FUNCTION}"
-      idle_cpu
-      stop_cpu_monitor
-      LOAD=$((LOAD + 50))
+    # Stress CPU core
+    "${TEST_FUNCTION}"
+    # Increase load
+    LOAD=$((LOAD + 10))
   done
+
+  # Stop monitoring agent
+  stop_cpu_monitor
+
+  local END_TEST=$(date +%s%N)
+  print_time "${START_TEST}" "${END_TEST}"
 }
 
 export -f run_seq_experiment
@@ -309,7 +345,6 @@ function run_experiment() {
 	CORES_ARRAY=("$@")
 
 	local START_TEST=$(date +%s%N)
-	run_seq_experiment "${TEST_FUNCTION}"
     CURRENT_CORES=""
 	LOAD=200
 	for ((i = 0; i < ${#CORES_ARRAY[@]}; i += 2)); do
@@ -318,11 +353,10 @@ function run_experiment() {
       else
           CURRENT_CORES+=",${CORES_ARRAY[i]},${CORES_ARRAY[i+1]}"
       fi
-	    start_cpu_monitor
-	    "${TEST_FUNCTION}"
-	    idle_cpu
-	    stop_cpu_monitor
-	    LOAD=$((LOAD + 200))
+      start_cpu_monitor
+      "${TEST_FUNCTION}"
+      stop_cpu_monitor
+      LOAD=$((LOAD + 200))
 	done
 	local END_TEST=$(date +%s%N)
     print_time "${START_TEST}" "${END_TEST}"
@@ -400,22 +434,8 @@ function incremental_core_stress() {
 
 export -f incremental_core_stress
 
-function avoid_core_overlapping() {
-  PHYSICAL_CORE=${1}
-  LOGICAL_CORE=${2}
-
-  # Assign new core different from physical and logical core for monitoring agents and other services
-  # Now we choose the first found core or 0 if no core was found
-  for (( i=0; i<THREADS; i++ )); do
-    if [ "${i}" -ne "${PHYSICAL_CORE}" ] && [ "${i}" -ne "${LOGICAL_CORE}" ]; then
-      NEW_CORE="${i}"
-      break
-    fi
-  done
-  if [ -z "${NEW_CORE}" ]; then
-    m_warn "Not found a core different from cores ${PHYSICAL_CORE} and ${LOGICAL_CORE}. Using core 0..."
-    NEW_CORE=0
-  fi
+function change_agents_affinity() {
+  NEW_CORE=${1}
 
   # Assign container to the new core
   CONTAINERS=("cgroups_modifier" "rapl")
@@ -437,6 +457,29 @@ function avoid_core_overlapping() {
 
 }
 
+export -f change_agents_affinity
+
+function avoid_core_overlapping() {
+  PHYSICAL_CORE=${1}
+  LOGICAL_CORE=${2}
+
+  # Assign new core different from physical and logical core for monitoring agents and other services
+  # Now we choose the first found core or 0 if no core was found
+  for (( i=0; i<THREADS; i++ )); do
+    if [ "${i}" -ne "${PHYSICAL_CORE}" ] && [ "${i}" -ne "${LOGICAL_CORE}" ]; then
+      NEW_CORE="${i}"
+      break
+    fi
+  done
+  if [ -z "${NEW_CORE}" ]; then
+    m_warn "Not found a core different from cores ${PHYSICAL_CORE} and ${LOGICAL_CORE}. Using core 0..."
+    NEW_CORE=0
+  fi
+
+  change_agents_affinity "${NEW_CORE}"
+
+}
+
 export -f avoid_core_overlapping
 
 function start_cgroups_modifier() {
@@ -455,7 +498,7 @@ function single_core_experiment() {
   LOGICAL_CORE=${2}
 
   # Start instance to modify cgroups
-  start_cgroups_modifier "${PHYSICAL_CORE}"
+  start_cgroups_modifier
 
   # Start CPU monitor only once as it will monitor always the same cores
   CURRENT_CORES="${PHYSICAL_CORE},${LOGICAL_CORE}"

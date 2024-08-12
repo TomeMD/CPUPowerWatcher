@@ -6,7 +6,7 @@ if [ "${OS_VIRT}" == "docker" ]; then
 	docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}"
 else
     # TODO: Use nice to set lower priority to this process
-    sudo apptainer instance start "${RAPL_HOME}"/rapl.sif rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}"
+    sudo apptainer instance start --cpuset-cpus "0" --cpus 0.01 "${RAPL_HOME}"/rapl.sif rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}"
 fi
 
 
