@@ -37,7 +37,7 @@ Usage: $(basename "$0") [OPTIONS]
                            workload. Use --fio-target to specify target directory. This option is not compatible with
                            fio tests.
   --custom-tests <file>    Use custom tests file to create custom lists of cores to stress.
-                           [Default: ./tests/custom-tests.sh]
+                           [Default: ./bin/test/custom-tests.sh]
   -h, --help               Show this help and exit
 EOF
 exit 1
