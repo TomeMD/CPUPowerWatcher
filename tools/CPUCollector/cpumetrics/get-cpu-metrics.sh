@@ -59,7 +59,9 @@ done
 while true; do
     TOTAL_FREQ=0; TOTAL_TEMP=0; USER_UTIL=0; SYSTEM_UTIL=0; IOWAIT_UTIL=0
     readarray -t PROC_LINES < /proc/stat
-    read_cpu_temperature
+
+    DATA=""
+    TIMESTAMP=$(date +%s%N)
     for CORE in "${CORES_ARRAY[@]}"; do
       FREQ_CORE=$(<"/sys/devices/system/cpu/cpu${CORE}/cpufreq/scaling_cur_freq")
       compute_core_utilization
@@ -67,12 +69,17 @@ while true; do
       USER_UTIL=$((USER_UTIL + USER_UTIL_CORE))
       SYSTEM_UTIL=$((SYSTEM_UTIL + SYSTEM_UTIL_CORE))
       IOWAIT_UTIL=$((IOWAIT_UTIL + IOWAIT_UTIL_CORE))
+
+      # Add core data
+      DATA+="cpu_metrics,core=${CORE} freq=${FREQ_CORE},user=${USER_UTIL_CORE},system=${SYSTEM_UTIL_CORE},iowait=${IOWAIT_UTIL_CORE} ${TIMESTAMP}\n"
     done
     AVG_FREQ=$((TOTAL_FREQ / ${#CORES_ARRAY[@]} / 1000))
+    read_cpu_temperature
+
+    # Add global data
+    DATA+="cpu_metrics,core=all avgfreq=${AVG_FREQ},sumfreq=${TOTAL_FREQ},user=${USER_UTIL},system=${SYSTEM_UTIL},iowait=${IOWAIT_UTIL},temp=${TOTAL_TEMP} ${TIMESTAMP}"
 
     # Send data to InfluxDB
-    TIMESTAMP=$(date +%s%N)
-    DATA="cpu_metrics avgfreq=${AVG_FREQ},sumfreq=${TOTAL_FREQ},user=${USER_UTIL},system=${SYSTEM_UTIL},iowait=${IOWAIT_UTIL},temp=${TOTAL_TEMP} ${TIMESTAMP}"
-    curl -s -XPOST "http://${INFLUXDB_HOST}:8086/api/v2/write?org=MyOrg&bucket=${INFLUXDB_BUCKET}" --header "Authorization: Token MyToken" --data-binary "${DATA}"
+    echo -e "${DATA}" | curl -s -XPOST "http://${INFLUXDB_HOST}:8086/api/v2/write?org=MyOrg&bucket=${INFLUXDB_BUCKET}" --header "Authorization: Token MyToken" --data-binary @-
     sleep "${SAMPLING_FREQUENCY}"
 done
