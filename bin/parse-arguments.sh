@@ -32,7 +32,7 @@ Usage: $(basename "$0") [OPTIONS]
                                                          in key=value format.
 
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
-  --base                    Get base measurements before stress tests to have idle consumption and overhead metrics.
+  --base                   Get base measurements before stress tests to have idle consumption and overhead metrics.
   --add-io-noise           Run fio to make random reads/writes over specified target while running the specified
                            workload. Use --fio-target to specify target directory. This option is not compatible with
                            fio tests.
