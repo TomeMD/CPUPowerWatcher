@@ -43,7 +43,7 @@ Usage: run.sh [OPTIONS]
                                                          [Default: cpu]
                                 --stress-load-types      Comma-separated list of types of load to stress the CPU.
                                                          Used together with CPU stressor. [Default: all]
-                                --other-options          Comma-separated list of other stress-ng options specified
+                                --stress-extra-options   Comma-separated list of other stress-ng options specified
                                                          in key=value format.
 
   -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]

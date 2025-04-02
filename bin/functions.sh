@@ -157,15 +157,19 @@ function run_stress-system() {
       LOAD=100
     fi
 
+    # Set container and Stress-system options
+    local CONTAINER_OPTS="--cpuset-cpus ${CURRENT_CORES} --cpus ${CPU_QUOTA}"
+    local STRESS_OPTS="${STRESS_EXTRA_OPTS}-l ${LOAD} -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CURRENT_CORES} -t ${STRESS_TIME}"
+
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name stress-system -it stress-system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t "${STRESS_TIME}" >> "${LOG_FILE}" 2>&1
+		docker run --rm --name stress-system ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
 	else
-		sudo apptainer instance start -B /scratch2:/scratch2 --cpuset-cpus "${CURRENT_CORES}" --cpus "${CPU_QUOTA}" "${STRESS_CONTAINER_DIR}"/stress.sif stress_system ${OTHER_OPTIONS}-l "${LOAD}" -s "${STRESSORS}" --cpu-load-types "${LOAD_TYPES}" -c "${CURRENT_CORES}" -t "${STRESS_TIME}" >> "${LOG_FILE}" 2>&1
+		sudo apptainer instance start ${CONTAINER_OPTS} "${STRESS_CONTAINER_DIR}/stress.sif" stress_system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
 	fi
 
 	sleep "${STRESS_TIME}"
-
+	# Apptainer requires using instances to apply CPU constraints, thus an instance must be deployed and destroyed
 	if [ "${OS_VIRT}" == "apptainer" ]; then
 		sudo apptainer instance stop stress_system
 	fi
@@ -394,7 +398,7 @@ export -f change_cont_cpu_quota
 function stress_single_core() {
   CONTAINER_NAME=${1}
   CORE_TO_STRESS=${2}
-  COMMAND="/usr/local/bin/stress-system/run.sh ${OTHER_OPTIONS}-l 100 -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CORE_TO_STRESS} -t 4m -o /tmp/out"
+  COMMAND="/usr/local/bin/stress-system/run.sh ${STRESS_EXTRA_OPTS}-l 100 -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CORE_TO_STRESS} -t 4m -o /tmp/out"
   print_timestamp "STRESS-TEST (CORES = ${CORE_TO_STRESS} LOAD = ${LOAD}) START"
   sudo apptainer exec instance://"${CONTAINER_NAME}" bash -c "cd /tmp && ${COMMAND}" >> "${LOG_FILE}" 2>&1
   print_timestamp "STRESS-TEST (CORES = ${CORE_TO_STRESS} LOAD = ${LOAD}) STOP"
@@ -516,7 +520,7 @@ function single_core_experiment() {
   incremental_core_stress "stress_physical" "${STRESS_CONTAINER_PID}" "${PHYSICAL_CORE}"
 
   # Keep physical core at 100% to stress logical core
-  COMMAND="/usr/local/bin/stress-system/run.sh ${OTHER_OPTIONS}-l 100 -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${PHYSICAL_CORE} -t 2h -o /tmp/out"
+  COMMAND="/usr/local/bin/stress-system/run.sh ${STRESS_EXTRA_OPTS}-l 100 -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${PHYSICAL_CORE} -t 2h -o /tmp/out"
   sudo apptainer exec instance://stress_physical bash -c "cd /tmp && ${COMMAND}" >> /dev/null 2>&1 &
 
   # Start instance to stress logical core
