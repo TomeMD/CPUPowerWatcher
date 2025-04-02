@@ -175,6 +175,7 @@ int main (int argc, char **argv) {
     double energy, power;
     double energy_pp0_pkg0 = 0, power_pp0_pkg0 = 0, energy_pp0_pkg1 = 0, power_pp0_pkg1 = 0;
     double energy_pkg0 = 0, power_pkg0 = 0, energy_pkg1 = 0, power_pkg1 = 0;
+    int events_to_send;
     char column_joules[40], column_watts[40], measure_energy[40], measure_power[40];
     start_time=PAPI_get_real_nsec();
     after_time=start_time;
