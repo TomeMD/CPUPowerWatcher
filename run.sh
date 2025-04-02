@@ -13,9 +13,23 @@ export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
 . "${BIN_DIR}"/build.sh
 . "${BIN_DIR}"/init.sh
 
-# Run workload
-. "${BIN_DIR}"/run-workload.sh
+cleanup() {
+  if [ "${CLEANUP_DONE}" -eq 0 ]; then
+    CLEANUP_DONE=1
+    kill 0 && "${GLOBAL_HOME}/bin/clean.sh"
+  fi
+}
 
-# Close environment
-. "${BIN_DIR}"/finish.sh
+# Capture SIGINT (Ctrl-C) and SIGTERM (kill)
+trap cleanup SIGINT SIGTERM
+CLEANUP_DONE=0
 
+(
+  # Run workload
+  . "${BIN_DIR}"/run-workload.sh
+
+  # Close environment
+  . "${BIN_DIR}"/finish.sh
+) &
+
+wait $!
