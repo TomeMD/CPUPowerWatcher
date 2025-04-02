@@ -147,10 +147,30 @@ function stop_cpu_monitor() {
 
 export -f stop_cpu_monitor
 
+function get_bind_from_stress_options() {
+  local BIND_MOUNT=""
+  if [ -n "${STRESS_EXTRA_OPTS}" ]; then
+    for OPT in "${STRESS_EXTRA_OPTS_ARRAY[@]}"; do
+      IFS='=' read KEY VALUE <<< "${OPT}"
+      if [ "${KEY}" == "temp-path" ]; then
+        if [ "${OS_VIRT}" == "docker" ]; then
+          BIND_MOUNT="-v ${VALUE}:${VALUE} "
+        else
+          BIND_MOUNT="-B ${VALUE}:${VALUE} "
+        fi
+      fi
+    done
+  fi
+  echo "${BIND_MOUNT}"
+}
+
+export -f get_bind_from_stress_options
+
 function run_stress-system() {
     local CPU_QUOTA=$(echo "scale=2; ${LOAD} / 100 " | bc)
     local STRESS_TIME=120
-
+    # Check if we have to set a bind mount for container (e.g., iomix stressor needs to write in host directory)
+    local BIND_MOUNT=$(get_bind_from_stress_options)
     # Stress-system does weird things when we specify LOAD < 100 (in this case load is adjusted with CPU quota)
     local OLD_LOAD="${LOAD}"
     if [ "${LOAD}" -lt "100" ];then
