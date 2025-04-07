@@ -5,7 +5,7 @@ export BIN_DIR="${GLOBAL_HOME}"/bin
 export TEST_DIR="${BIN_DIR}"/test
 export CONF_DIR="${GLOBAL_HOME}"/etc
 export TOOLS_DIR="${GLOBAL_HOME}"/tools
-export LOG_FILE=${LOG_DIR}/${WORKLOAD}.log
+export LOG_FILE="${LOG_DIR}/${WORKLOAD}.log"
 
 # CPUCollector
 export GLANCES_HOME="${TOOLS_DIR}"/CPUCollector/glances
@@ -15,6 +15,7 @@ export RAPL_HOME="${TOOLS_DIR}"/CPUCollector/rapl
 # stress-system
 export STRESS_HOME="${TOOLS_DIR}"/stress-system
 export STRESS_CONTAINER_DIR="${STRESS_HOME}"/container
+export STRESS_REPORTS_DIR="${LOG_DIR}/stress-system-reports"
 
 # NPB
 export NPB_HOME="${TOOLS_DIR}"/NPB3.4.2

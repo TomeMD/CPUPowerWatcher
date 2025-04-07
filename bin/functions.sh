@@ -178,14 +178,14 @@ function run_stress-system() {
     fi
 
     # Set container and Stress-system options
-    local CONTAINER_OPTS="--cpuset-cpus ${CURRENT_CORES} --cpus ${CPU_QUOTA}"
-    local STRESS_OPTS="${STRESS_EXTRA_OPTS}-l ${LOAD} -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CURRENT_CORES} -t ${STRESS_TIME}"
+    local CONTAINER_OPTS="${BIND_MOUNT}--cpuset-cpus ${CURRENT_CORES} --cpus ${CPU_QUOTA}"
+    local STRESS_OPTS="${STRESS_EXTRA_OPTS}-l ${LOAD} -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CURRENT_CORES} -t ${STRESS_TIME} -o /opt"
 
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name stress-system ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
+		docker run --rm --name stress-system -v "${STRESS_REPORTS_DIR}:/opt" ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
 	else
-		sudo apptainer instance start ${CONTAINER_OPTS} "${STRESS_CONTAINER_DIR}/stress.sif" stress_system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
+		sudo apptainer instance start -B "${STRESS_REPORTS_DIR}:/opt" ${CONTAINER_OPTS} "${STRESS_CONTAINER_DIR}/stress.sif" stress_system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
 	fi
 
 	sleep "${STRESS_TIME}"

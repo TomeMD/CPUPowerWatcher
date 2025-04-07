@@ -26,6 +26,7 @@ chmod +x "${CPU_MONITOR_HOME}"/get-cpu-metrics.sh
 # Compile workloads
 if [ "${WORKLOAD}" == "stress-system" ]; then # STRESS-SYSTEM
   chmod +x "${STRESS_HOME}"/run.sh
+  mkdir -p "${STRESS_REPORTS_DIR}" # Create directory to store stress-system reports
   if [ "$OS_VIRT" == "docker" ]; then
     if [ -z "$(docker image ls -q stress-system)" ]; then
       m_echo "Building stress-system..."
