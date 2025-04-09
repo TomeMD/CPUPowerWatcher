@@ -1,6 +1,14 @@
 #!/bin/bash
 
 BASE_MEASURE_TIME=240
+RAPL_SAMPLING_FREQUENCY=5
+
+# Start RAPL with a low sampling frequency (minimizing interference in power values)
+if [ "${OS_VIRT}" == "docker" ]; then
+	docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" "${RAPL_SAMPLING_FREQUENCY}"
+else
+  sudo apptainer instance start --cpuset-cpus "0" --cpus 0.01 "${RAPL_HOME}"/rapl.sif rapl "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" "${RAPL_SAMPLING_FREQUENCY}"
+fi
 
 ################################################################################################
 # Only_RAPL: Get idle measurements only with RAPL monitor running (lowest possible overhead)
@@ -68,3 +76,10 @@ print_timestamp "IDLE STOP"
 #    stop_cpu_monitor
 #  done
 #fi
+
+# Stop RAPL as it will be started with a higher sampling frequency for tests (init.sh)
+if [ "$OS_VIRT" == "docker" ]; then
+	docker stop rapl && docker rm rapl
+else
+	sudo apptainer instance stop rapl
+fi

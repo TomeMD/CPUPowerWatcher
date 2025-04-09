@@ -5,6 +5,9 @@ if [ "${GET_BASE_MEASUREMENTS}" -ne "0" ]; then
   . "${TEST_DIR}"/get-base-measurements.sh
 fi
 
+# Initialize monitoring environment (just RAPL currently)
+. "${BIN_DIR}"/init.sh
+
 if [ "${ADD_IO_NOISE}" -ne "0" ] && [ "${SINGLE_CORE_MODE}" -eq "0" ]; then
   FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --numjobs=1 --runtime=30h --time_based"
   if [ "${OS_VIRT}" == "docker" ]; then

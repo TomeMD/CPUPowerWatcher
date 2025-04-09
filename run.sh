@@ -11,7 +11,6 @@ export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
 
 # Build environment
 . "${BIN_DIR}"/build.sh
-. "${BIN_DIR}"/init.sh
 
 cleanup() {
   if [ "${CLEANUP_DONE}" -eq 0 ]; then
