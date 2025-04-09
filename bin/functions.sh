@@ -365,27 +365,32 @@ function run_seq_experiment() {
 export -f run_seq_experiment
 
 function run_experiment() {
-	NAME=$1
-	TEST_FUNCTION=$2
-	shift 2
-	CORES_ARRAY=("$@")
+  NAME=$1
+  TEST_FUNCTION=$2
+  shift 2
+  CORES_ARRAY=("$@")
 
-	local START_TEST=$(date +%s%N)
-    CURRENT_CORES=""
-	LOAD=200
-	for ((i = 0; i < ${#CORES_ARRAY[@]}; i += 2)); do
-      if [ -z "${CURRENT_CORES}" ]; then
-          CURRENT_CORES+="${CORES_ARRAY[i]},${CORES_ARRAY[i+1]}"
-      else
-          CURRENT_CORES+=",${CORES_ARRAY[i]},${CORES_ARRAY[i+1]}"
-      fi
-      start_cpu_monitor
-      "${TEST_FUNCTION}"
-      stop_cpu_monitor
-      LOAD=$((LOAD + 200))
-	done
-	local END_TEST=$(date +%s%N)
-    print_time "${START_TEST}" "${END_TEST}"
+  CURRENT_CORES=""
+  LOAD=100
+  local START_TEST=$(date +%s%N)
+  for ((i = 0; i < ${#CORES_ARRAY[@]}; i += 1)); do
+    # Add new cores to the list
+    if [ -z "${CURRENT_CORES}" ]; then
+      CURRENT_CORES+="${CORES_ARRAY[i]}"
+    else
+      CURRENT_CORES+=",${CORES_ARRAY[i]}"
+    fi
+    # Start daemon to monitor CPU (usage, frequency,...)
+    start_cpu_monitor
+    # Run workload
+    "${TEST_FUNCTION}"
+    # Stop monitoring daemon
+    stop_cpu_monitor
+    # Increase load for next iteration
+    LOAD=$((LOAD + 100))
+  done
+  local END_TEST=$(date +%s%N)
+  print_time "${START_TEST}" "${END_TEST}"
 }
 
 export -f run_experiment
