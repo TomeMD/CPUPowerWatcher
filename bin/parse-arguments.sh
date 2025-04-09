@@ -8,9 +8,7 @@ Usage: $(basename "$0") [OPTIONS]
                                 apptainer
   -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
   -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: public]
-  -s, --single-core         Single core mode. Stress only one core (physical and logical) incrementally. This mode only
-                            supports stress-system as workload and apptainer as OS-level virtualization technology.
-  --base                    Get base measurements before tests to have idle consumption and overhead metrics.
+  -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.
@@ -32,7 +30,7 @@ Usage: $(basename "$0") [OPTIONS]
                                 --stress-extra-options   Comma-separated list of other stress-ng options specified
                                                          in key=value format.
 
-  -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
+  --base                   Get base measurements before tests to have idle consumption and overhead metrics.
   --add-io-noise           Run fio to make random reads/writes over specified target while running the specified
                            workload. Use --fio-target to specify target directory. This option is not compatible with
                            fio tests.
@@ -56,10 +54,6 @@ while [[ $# -gt 0 ]]; do
     -b|--influxdb-bucket)
       INFLUXDB_BUCKET="$2"
       shift 2
-      ;;
-    -s|--single-core)
-      SINGLE_CORE_MODE=1
-      shift 1
       ;;
     -w|--workload)
       WORKLOAD="$2"

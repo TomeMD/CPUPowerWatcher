@@ -8,7 +8,8 @@ fi
 # Initialize monitoring environment (just RAPL currently)
 . "${BIN_DIR}"/init.sh
 
-if [ "${ADD_IO_NOISE}" -ne "0" ] && [ "${SINGLE_CORE_MODE}" -eq "0" ]; then
+# Add an extra container running fio to add I/O noise in the observed metrics
+if [ "${ADD_IO_NOISE}" -ne "0" ]; then
   FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --numjobs=1 --runtime=30h --time_based"
   if [ "${OS_VIRT}" == "docker" ]; then
     docker run -d --cpuset-cpus "0" --name fio_noise --pid host --privileged --network host --restart=unless-stopped -v "${FIO_TARGET}":/tmp ljishen/fio:latest ${FIO_OPTIONS}
@@ -22,9 +23,6 @@ m_echo "Running ${WORKLOAD} tests..."
 if [ "${CUSTOM_TESTS}" -ne "0" ];then
   m_echo "Custom tests mode is active. Running custom tests from ${CUSTOM_TESTS_FILE}"
   . "${CUSTOM_TESTS_FILE}"
-elif [ "${SINGLE_CORE_MODE}" -ne "0" ]; then
-  m_echo "Single core mode is active. Running stress-system on 1 core (physical and logical)..."
-  . "${TEST_DIR}"/tests-singlecore.sh
 elif [ "${WORKLOAD}" == "npb" ]; then
   . "${TEST_DIR}"/npb-tests.sh
 elif [ "${WORKLOAD}" == "spark" ]; then
