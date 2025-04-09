@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export GLOBAL_HOME=`cd $(dirname "$0"); pwd`
+export GLOBAL_HOME=$(dirname -- "$(readlink -f -- "${BASH_SOURCE}")")
 
 # Get initial configuration
 . "${GLOBAL_HOME}"/etc/default-conf.sh

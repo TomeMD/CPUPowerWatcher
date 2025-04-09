@@ -107,12 +107,12 @@ function start_cpu_monitor() {
         m_echo "CPU monitoring agent succesfully started. (PID = ${CPU_MONITOR_PID})"
       else
         MAX_TRIES=$(( MAX_TRIES - 1 ))
-        m_err "Error while starting CPU monitoring agent. Trying again."
+        m_warn "Error while starting CPU monitoring agent. Trying again."
       fi
 	done
 
 	if [ "${MAX_TRIES}" -eq "0" ]; then
-	  m_err "Exceeded maximum number of tries to start CPU monitor."
+	  m_err "Exceeded maximum number of tries to start CPU monitor (cores = ${CURRENT_CORES})"
 	  exit 1
 	fi
 
@@ -183,8 +183,10 @@ function run_stress-system() {
 
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
+	    m_echo "docker run --rm --name stress-system -v ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS}"
 		docker run --rm --name stress-system -v "${STRESS_REPORTS_DIR}:/opt" ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
 	else
+	    m_echo "sudo apptainer instance start -B ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} ${STRESS_CONTAINER_DIR}/stress.sif stress_system ${STRESS_OPTS}"
 		sudo apptainer instance start -B "${STRESS_REPORTS_DIR}:/opt" ${CONTAINER_OPTS} "${STRESS_CONTAINER_DIR}/stress.sif" stress_system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
 	fi
 
