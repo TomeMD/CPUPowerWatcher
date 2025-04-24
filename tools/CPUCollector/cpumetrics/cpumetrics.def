@@ -2,15 +2,22 @@ Bootstrap: docker
 From: debian:bullseye-slim
 
 %files
-  get-cpu-metrics.sh /usr/local/bin/
-  config.sh /usr/local/bin/
+    ./src/cpumetrics /var/lib/cpumetrics
 
 %post
-  apt-get update && apt-get install -y msr-tools curl
-  chmod +x /usr/local/bin/get-cpu-metrics.sh
+    export CPUMETRICS_SRC=/var/lib/cpumetrics
+
+    # Install dependencies
+    apt-get update && apt-get install -y msr-tools build-essential gcc git
+
+    # Compile cpumetrics tool
+    cd "${CPUMETRICS_SRC}"
+    make
+    chmod +x "${CPUMETRICS_SRC}/cpumetrics"
+    mv "${CPUMETRICS_SRC}/cpumetrics" /usr/local/bin/cpumetrics
 
 %startscript
-  /usr/local/bin/get-cpu-metrics.sh "$@"
+  /usr/local/bin/cpumetrics "$@"
 
 %runscript
-  /usr/local/bin/get-cpu-metrics.sh "$@"
+  /usr/local/bin/cpumetrics "$@"

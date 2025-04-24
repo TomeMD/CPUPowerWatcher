@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%files
+  get-cpu-metrics.sh /usr/local/bin/
+  config.sh /usr/local/bin/
+
+%post
+  apt-get update && apt-get install -y msr-tools curl
+  chmod +x /usr/local/bin/get-cpu-metrics.sh
+
+%startscript
+  /usr/local/bin/get-cpu-metrics.sh "$@"
+
+%runscript
+  /usr/local/bin/get-cpu-metrics.sh "$@"
