@@ -8,7 +8,7 @@ Usage: $(basename "$0") [OPTIONS]
                                 apptainer
   -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
   -b, --influxdb-bucket     InfluxDB bucket to store metrics. [Default: public]
-  -o, --output <dir>       Directory (absolute path) to store log files. [Default: ./log]
+  -o, --output <dir>        Directory (absolute path) to store log files. [Default: ./log]
   -w, --workload            Workload to stress the system with. [Default: stress-system]
                               npb                 Run NPB kenerls.
                               sysbench            Run Sysbench kernels.

@@ -58,6 +58,11 @@ function print_conf() {
     if [ "${GET_BASE_MEASUREMENTS}" -ne 0 ]; then
       m_echo "Get base measurements = active"
     fi
+    m_echo "Hardware info:"
+    m_echo "\tPhysical cores per socket: ${PHY_CORES_PER_CPU}"
+    m_echo "\tNumber of sockets: ${SOCKETS}"
+    m_echo "\tNumber of threads: ${THREADS}"
+    m_echo "\tMultithreading support: ${MULTITHREADING_SUPPORT}"
     m_echo "Writing output to ${LOG_FILE}"
 }
 

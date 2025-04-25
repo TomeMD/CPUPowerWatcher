@@ -37,4 +37,5 @@ export FIO_HOME="${TOOLS_DIR}"/fio
 # Geekbench
 export GEEKBENCH_HOME="${TOOLS_DIR}"/Geekbench-"${GEEKBENCH_VERSION}"-Linux
 
+# Get CPU microarchitecture info
 . "${BIN_DIR}"/get-hw-info.sh

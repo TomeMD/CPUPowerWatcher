@@ -2,7 +2,17 @@
 
 export PHY_CORES_PER_CPU=$(lscpu | grep "Core(s) per socket:" | awk '{print $4}')
 export SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')
-export THREADS=$((PHY_CORES_PER_CPU * SOCKETS * 2))
+export THREADS=$(nproc)
+export THEORETICAL_THREADS=$((PHY_CORES_PER_CPU * SOCKETS * 2))
+
+export MULTITHREADING_SUPPORT="FULLY SUPPORTED"
+if [ "${THREADS}" -lt "${THEORETICAL_THREADS}" ]; then
+  if [ "${THREADS}" -gt "$(( THEORETICAL_THREADS / 2 ))" ]; then
+      MULTITHREADING_SUPPORT="SUPPORTED IN SOME CORES"
+  else
+      MULTITHREADING_SUPPORT="NOT SUPPORTED"
+  fi
+fi
 
 # FIRST_CORE_SOCKET stores the number assigned to the first physical core of each socket
 declare -A FIRST_CORE_SOCKET

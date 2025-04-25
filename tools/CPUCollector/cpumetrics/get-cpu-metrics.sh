@@ -49,6 +49,7 @@ if [ "${MONITOR_CSTATES}" -gt "0" ]; then
   readarray -t CSTATE_NAMES < <(cat "${SYS_CPU_PATH}"/cpu0/cpuidle/state*/name)
   NUM_CSTATES=${#CSTATE_NAMES[@]}
   CSTATE_TIMES_FILES=()
+  # Array: (<cpu0-state0> ... <cpu0-stateM> <cpu1-state0> ... <cpu1-stateM> ... <cpuN-state0> ... <cpuN-stateM>)
   for CORE in "${CORES_ARRAY[@]}"; do
       for (( i=0; i<NUM_CSTATES; i++ )); do
         CSTATE_TIMES_FILES+=("${SYS_CPU_PATH}/cpu${CORE}/cpuidle/state${i}/time")
@@ -136,7 +137,7 @@ function compute_cstates_usage() {
   local CSTATE_TOTAL_TIME=0
   local DIFF_CSTATES_CORE=()
 
-  # Get current C-states times
+  # Get current time for all available C-states
   for (( i=0; i<NUM_CSTATES; i++ )); do
     POSITION=$(( CSTATE_CORE_OFFSET + i ))
     DIFF_CSTATES_CORE["${i}"]=$(( CSTATE_TIMES["${POSITION}"] - PREV_CSTATE_TIMES["${POSITION}"] ))
@@ -144,12 +145,15 @@ function compute_cstates_usage() {
     CSTATE_TOTAL_TIME=$(( CSTATE_TOTAL_TIME + CSTATE_TIMES["${POSITION}"] ))
   done
 
+  # Get total elapsed time for C-States
   DIFF_TOTAL=$(( CSTATE_TOTAL_TIME - PREV_CSTATE_TOTAL_TIME_CORE["${CORE}"] ))
   PREV_CSTATE_TOTAL_TIME_CORE["${CORE}"]="${CSTATE_TOTAL_TIME}"
 
+  # If elapsed time is zero, just send all state percentages as zero (avoid zero division)
   if [ "${DIFF_TOTAL}" -eq "0" ]; then
       CSTATE_PCT_CORE=("${CSTATE_PCT_CORE_ZERO[@]}")
   else
+    # For each C-State get percentage over total C-States time
     for (( i=0; i<NUM_CSTATES; i++ )); do
       CSTATE_PCT_CORE[${i}]=$(( 100 * DIFF_CSTATES_CORE["${i}"] / DIFF_TOTAL ))
     done
