@@ -15,7 +15,8 @@ export GLOBAL_HOME=$(dirname -- "$(readlink -f -- "${BASH_SOURCE}")")
 cleanup() {
   if [ "${CLEANUP_DONE}" -eq 0 ]; then
     CLEANUP_DONE=1
-    kill 0 && "${GLOBAL_HOME}/bin/clean.sh"
+    kill 0 && "${GLOBAL_HOME}/bin/finish.sh"
+    m_warn "CLEANUP HAS BEEN CALLED (ENVIRONMENT WAS CLOSED AFTER SIGTERM OR SIGINT)"
   fi
 }
 
