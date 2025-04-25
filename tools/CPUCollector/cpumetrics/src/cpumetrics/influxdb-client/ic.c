@@ -182,12 +182,12 @@ void ic_measure(char *section)
     DEBUG fprintf(stderr, "ic_measure(\"%s\") count=%ld\n", section, output_char);
 }
 
-void ic_measureend()
+void ic_measureend(char *timestamp)
 {
     ic_check( 4 );
     remove_ending_comma_if_any();
     if (!subended) {
-         output_char += sprintf(&output[output_char], "\n");
+         output_char += sprintf(&output[output_char], " %s\n", timestamp);
     }
     subended = 0;
     DEBUG fprintf(stderr, "ic_measureend()\n");
@@ -224,11 +224,11 @@ void ic_sub(char *resource)
     DEBUG fprintf(stderr, "ic_sub(\"%s\") count=%ld\n", resource, output_char);
 }
 
-void ic_subend()
+void ic_subend(char *timestamp)
 {
     ic_check( 4 );
     remove_ending_comma_if_any();
-    output_char += sprintf(&output[output_char], "   \n");
+    output_char += sprintf(&output[output_char], " %s\n", timestamp);
     subended = 1;
     DEBUG fprintf(stderr, "ic_subend()\n");
 }

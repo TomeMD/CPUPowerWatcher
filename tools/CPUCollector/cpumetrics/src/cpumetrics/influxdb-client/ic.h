@@ -8,10 +8,10 @@
  void ic_tags(char *tags);
 
  void ic_measure(char *section);
- void ic_measureend();
+ void ic_measureend(char *timestamp);
 
  void ic_sub(char *sub_name);
- void ic_subend();
+ void ic_subend(char *timestamp);
 
  void ic_long(char *name, long long value);
  void ic_double(char *name, double value);

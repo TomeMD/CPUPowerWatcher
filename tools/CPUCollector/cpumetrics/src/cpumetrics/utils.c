@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <stdarg.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "utils.h"
@@ -26,6 +27,18 @@
 double vid_to_voltage(uint64_t msr_value) {
     uint64_t vid = (msr_value >> 32) & 0xFFFF;
     return (double) vid / 8192.0;
+}
+
+int uint64_to_str(char *buf, uint64_t value) {
+    size_t len = 21; /* 20 digits + '/0' */
+    int ret;
+    if (!buf) {
+        fprintf(stderr, "Error: Converting uint64 to str: buf empty or too small (<%ld)\n", len); return -1;
+    }
+    if ((ret = snprintf(buf, len, "%" PRIu64, value)) < 0) {
+        fprintf(stderr, "Error: snprintf encoding failed\n"); return -1;
+    }
+    return 0;
 }
 
 uint64_t get_ns_time() {

@@ -130,7 +130,6 @@ int main(int argc, char **argv) {
     // *********************************************************************
     // CPU usage initialization
     // *********************************************************************
-
     /* Allocate arrays indexed by core to store previous time value. Some memory will be wasted if all the cores
        are not used but this waste is limited by the maximum number of cores in a machine */
     unsigned long long *prev_user   = calloc(max_core+1, sizeof(unsigned long long));
@@ -174,6 +173,7 @@ int main(int argc, char **argv) {
     uint64_t start_monitoring, end_monitoring, end_timestamp, end_epoch;
     double sleep_time_us, total_delay_us, monitoring_delay_us, epoch_time_us;
     unsigned long long *cstate_core_times = calloc(num_cstates, sizeof(unsigned long long));
+    char start_timestamp_str[32];
     char **proc_lines = NULL;
     int proc_count = 0;
     printf("Start measuring loop...\n");
@@ -181,6 +181,9 @@ int main(int argc, char **argv) {
 
         /* Get start time in nanoseconds */
         start_monitoring = get_ns_time();
+        if (uint64_to_str(start_timestamp_str, start_monitoring) != 0) {
+            fprintf(stderr, "Error during conversion of start timestamp to string\n"); exit(EXIT_FAILURE);
+        }
 
         // Cumulative variables for global CPU metrics
         unsigned long long total_freq = 0;
@@ -299,7 +302,7 @@ int main(int argc, char **argv) {
                 double v = vid_to_voltage(msr);
                 ic_double("vcore", v);
             }
-            ic_measureend(); /* End InfluxDB measurement */
+            ic_measureend(start_timestamp_str); /* End InfluxDB measurement */
         }
 
         // ---------------------------------------------------------------------
@@ -344,7 +347,7 @@ int main(int argc, char **argv) {
         }
 
         free_array((void**) proc_lines, proc_count, free);
-        ic_measureend(); /* End InfluxDB measurement */
+        ic_measureend(start_timestamp_str); /* End InfluxDB measurement */
 
         end_monitoring = get_ns_time();
 

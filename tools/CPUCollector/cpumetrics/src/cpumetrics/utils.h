@@ -14,6 +14,15 @@
 double vid_to_voltage(uint64_t msr_value);
 
 /**
+ * Convert a 64-bit unsigned integer (uint64_t) to a string.
+ *
+ * @param buf       Buffer to store the output string (must be pre-allocated).
+ * @param value     64-bit unsigned integer value.
+ * @return          0 on success, -1 on error.
+ */
+int uint64_to_str(char *buf, uint64_t value);
+
+/**
  * Get the current time in nanoseconds since the Epoch.
  * @return  Current time in nanoseconds.
  */
