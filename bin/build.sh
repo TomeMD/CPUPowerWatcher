@@ -6,22 +6,36 @@ m_echo "Building monitoring environment"
 
 # Build monitoring environment
 if [ "${OS_VIRT}" == "docker" ]; then
+  # RAPL
   if [ -z "$(docker image ls -q rapl)" ]; then
     m_echo "Building RAPL..."
     docker build -t rapl "${RAPL_HOME}"
   else
     m_echo "RAPL image already exists. Skipping build."
   fi
+  # CPU Monitor (cpumetrics)
+  if [ -z "$(docker image ls -q cpumetrics)" ]; then
+    m_echo "Building CPU monitor..."
+    docker build -t cpumetrics "${CPU_MONITOR_HOME}"
+  else
+    m_echo "CPU monitor image already exists. Skipping build."
+  fi
 elif [ "${OS_VIRT}" == "apptainer" ]; then
+  # RAPL
   if [ ! -f "${RAPL_HOME}"/rapl.sif ]; then
     m_echo "Building RAPL..."
     cd "${RAPL_HOME}" && apptainer build -F rapl.sif rapl.def
   else
     m_echo "RAPL image already exists. Skipping build."
   fi
+  # CPU Monitor (cpumetrics)
+  if [ ! -f "${CPU_MONITOR_HOME}"/cpumetrics.sif ]; then
+    m_echo "Building CPU monitor..."
+    cd "${CPU_MONITOR_HOME}" && apptainer build -F cpumetrics.sif cpumetrics.def
+  else
+    m_echo "CPU monitor image already exists. Skipping build."
+  fi
 fi
-
-chmod +x "${CPU_MONITOR_HOME}"/get-cpu-metrics.sh
 
 # Compile workloads
 if [ "${WORKLOAD}" == "stress-system" ]; then # STRESS-SYSTEM

@@ -5,7 +5,7 @@ if [ "${GET_BASE_MEASUREMENTS}" -ne "0" ]; then
   . "${TEST_DIR}"/get-base-measurements.sh
 fi
 
-# Initialize monitoring environment (just RAPL currently)
+# Initialize monitoring environment
 . "${BIN_DIR}"/init.sh
 
 # Add an extra container running fio to add I/O noise in the observed metrics

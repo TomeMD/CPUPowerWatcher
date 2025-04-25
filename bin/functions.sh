@@ -244,12 +244,12 @@ function run_npb_omp_kernel() {
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
       set_n_cores ${NUM_THREADS}
-	    start_cpu_monitor
+	    # start_cpu_monitor
 	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) START"
 	    export OMP_NUM_THREADS="${NUM_THREADS}"
 	    taskset -c "${CURRENT_CORES}" timeout 5m bash -c "${COMMAND}"
 	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) STOP"
-	    stop_cpu_monitor
+	    # stop_cpu_monitor
 	    NUM_THREADS=$(( NUM_THREADS * 2 ))
 	    sleep 30
 	done
@@ -268,11 +268,11 @@ function run_npb_mpi_kernel() {
 	do
 	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to none --mca btl ^openib ${NPB_MPI_HOME}/${NPB_KERNEL} | tee -a ${LOG_FILE}; done"
         set_n_cores ${NUM_THREADS}
-	    start_cpu_monitor
+	    # start_cpu_monitor
 	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) START"
 	    taskset -c "${CURRENT_CORES}" timeout 5m bash -c "${COMMAND}"
 	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) STOP"
-	    stop_cpu_monitor
+	    # stop_cpu_monitor
 	    BASE=$(( BASE + 1))
 	    NUM_THREADS=$(( BASE * BASE )) # BT I/O needs an square number of processes
 	    sleep 30
@@ -288,11 +288,11 @@ function run_spark() {
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
 		set_n_cores ${NUM_THREADS}
-		start_cpu_monitor
+		# start_cpu_monitor
 		print_timestamp "SPARK (CORES = ${CURRENT_CORES}) START"
 		taskset -c "${CURRENT_CORES}" "${SMUSKET_HOME}"/bin/smusketrun -sm "-i ${SPARK_DATA_DIR}/ERR031558.fastq -n 64 -k 25" --conf "spark.local.dir=${SPARK_DATA_DIR}" --master local["${NUM_THREADS}"] --driver-memory 200g
 		print_timestamp "SPARK (CORES = ${CURRENT_CORES}) STOP"
-		stop_cpu_monitor
+		# stop_cpu_monitor
 		rm -rf "${SPARK_DATA_DIR}"/blockmgr* "${SPARK_DATA_DIR}"/spark-*
 		NUM_THREADS=$(( NUM_THREADS * 2 ))
 		sleep 20
@@ -309,7 +309,7 @@ function run_fio() {
 	do
 	  FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS} --runtime=30h --time_based"
 		set_n_cores ${NUM_THREADS}
-		start_cpu_monitor
+		# start_cpu_monitor
 		print_timestamp "FIO (CORES = ${CURRENT_CORES}) START"
     if [ "${OS_VIRT}" == "docker" ]; then
       docker run -d --rm --cpuset-cpus "${CURRENT_CORES}" --name fio -v "${FIO_TARGET}":/tmp ljishen/fio:latest ${FIO_OPTIONS}
@@ -323,7 +323,7 @@ function run_fio() {
     else
       sudo apptainer instance stop fio
     fi
-		stop_cpu_monitor
+		# stop_cpu_monitor
 		rm -rf "${FIO_TARGET}"/fio_job*
 		NUM_THREADS=$(( NUM_THREADS * 2 ))
 		sleep 30
@@ -349,7 +349,7 @@ function run_seq_experiment() {
   local START_TEST=$(date +%s%N)
 
   # Start monitoring agent and move to current core
-  start_cpu_monitor
+  # start_cpu_monitor
   if [ -n "${CPU_MONITOR_PID}" ]; then
     taskset -cp "${CURRENT_CORES}" "${CPU_MONITOR_PID}"
     m_echo "Changed CPU monitor (pid = ${CPU_MONITOR_PID}) affinity to core ${CURRENT_CORES}"
@@ -365,7 +365,7 @@ function run_seq_experiment() {
   done
 
   # Stop monitoring agent
-  stop_cpu_monitor
+  # stop_cpu_monitor
 
   local END_TEST=$(date +%s%N)
   print_time "${START_TEST}" "${END_TEST}"
@@ -390,11 +390,11 @@ function run_experiment() {
       CURRENT_CORES+=",${CORES_ARRAY[i]}"
     fi
     # Start daemon to monitor CPU (usage, frequency,...)
-    start_cpu_monitor
+    # start_cpu_monitor
     # Run workload
     "${TEST_FUNCTION}"
     # Stop monitoring daemon
-    stop_cpu_monitor
+    # stop_cpu_monitor
     # Increase load for next iteration
     LOAD=$((LOAD + 100))
   done
