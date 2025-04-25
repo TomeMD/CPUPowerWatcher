@@ -90,6 +90,19 @@ function set_n_cores() {
 
 export -f set_n_cores
 
+function get_comma_separated_list() {
+  local START="${1}"
+  local END="${2}"
+  local MSG=""
+  for ((i = START; i < END; i += 1)); do
+    MSG+="${i},"
+  done
+  MSG=${MSG:0:-1} # Remove last comma
+  echo "${MSG}"
+}
+
+export -f get_comma_separated_list
+
 function start_cpu_monitor() {
 	CPU_MONITOR_STARTED=0
 	MAX_TRIES=3
