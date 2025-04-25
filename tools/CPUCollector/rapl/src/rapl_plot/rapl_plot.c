@@ -21,19 +21,32 @@ SOFTWARE.
 
 #define MAX_EVENTS 32
 
+int lld_to_str(char *buf, long long value) {
+    size_t len = 21; /* 20 digits + '/0' */
+    int ret;
+    if (!buf) {
+        fprintf(stderr, "Error: Converting long long to str: buf empty or too small (<%ld)\n", len); return -1;
+    }
+    if ((ret = snprintf(buf, len, "%lld", value)) < 0) {
+        fprintf(stderr, "Error: snprintf encoding failed\n"); return -1;
+    }
+    return 0;
+}
+
 int main (int argc, char **argv) {
+    const int minimum_interval = 1e4; /* microseconds (0.01 seconds) */
     int retval,cid,rapl_cid=-1,numcmp;
     int i,code,enum_retval,seconds_interval,microseconds_interval,max_time;
     int num_events = 0;
     int EventSet = PAPI_NULL;
     long long values[MAX_EVENTS];
     char influxdb_host[100] = "montoxo.des.udc.es";
-    char influxdb_bucket[100] = "glances";
+    char influxdb_bucket[100] = "public";
     char hostname[1024], host_tag[1024+5];
     char event_name[BUFSIZ];
     PAPI_event_info_t evinfo;
     const PAPI_component_info_t *cmpinfo = NULL;
-    long long start_time,before_time,after_time;
+    long long start_time,before_time,after_time,offset_time,sleep_time;
     double elapsed_time,total_time;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
@@ -176,7 +189,7 @@ int main (int argc, char **argv) {
     double energy_pp0_pkg0 = 0, power_pp0_pkg0 = 0, energy_pp0_pkg1 = 0, power_pp0_pkg1 = 0;
     double energy_pkg0 = 0, power_pkg0 = 0, energy_pkg1 = 0, power_pkg1 = 0;
     int events_to_send;
-    char column_joules[40], column_watts[40], measure_energy[40], measure_power[40];
+    char column_joules[40], column_watts[40], measure_energy[40], measure_power[40], influxdb_timestamp[32];
     start_time=PAPI_get_real_nsec();
     after_time=start_time;
 
@@ -191,7 +204,10 @@ int main (int argc, char **argv) {
             exit(-1);
         }
 
-        usleep(microseconds_interval);
+        offset_time=(PAPI_get_real_nsec() - after_time)/1000 + 50;
+        sleep_time=(offset_time < microseconds_interval) ? (microseconds_interval - offset_time):minimum_interval;
+
+        usleep(sleep_time);
 
         /* Stop counting */
         after_time=PAPI_get_real_nsec();
@@ -203,6 +219,10 @@ int main (int argc, char **argv) {
 
         total_time=((double)(after_time-start_time))/1.0e9;
         elapsed_time=((double)(after_time-before_time))/1.0e9;
+
+        if (lld_to_str(influxdb_timestamp, after_time) != 0) {
+            fprintf(stderr, "Error during conversion of after time to string (InfluxDB timestamp)\n"); exit(EXIT_FAILURE);
+        }
 
         energy_pkg0 = 0;
         energy_pkg1 = 0;
@@ -261,10 +281,10 @@ int main (int argc, char **argv) {
 
             ic_measure(measure_energy);
             ic_double(column_joules, energy);
-            ic_measureend();
+            ic_measureend(influxdb_timestamp);
             ic_measure(measure_power);
             ic_double(column_watts, power);
-            ic_measureend();
+            ic_measureend(influxdb_timestamp);
 
             events_to_send += 1;
 	    }
@@ -273,11 +293,11 @@ int main (int argc, char **argv) {
             //printf("energy_pkg0 %.3f, energy_pp0_pkg0 %.3f\n", energy_pkg0, energy_pp0_pkg0);
             ic_measure("UNCORE_ENERGY_PACKAGE");
             ic_double("UNCORE_ENERGY:PACKAGE0(J)", energy_pkg0 - energy_pp0_pkg0);
-            ic_measureend();
+            ic_measureend(influxdb_timestamp);
 
             ic_measure("UNCORE_POWER_PACKAGE");
             ic_double("UNCORE_POWER:PACKAGE0(W)", power_pkg0 - power_pp0_pkg0);
-            ic_measureend();
+            ic_measureend(influxdb_timestamp);
 
             events_to_send += 1;
         }
@@ -286,11 +306,11 @@ int main (int argc, char **argv) {
             //printf("energy_pkg1 %.3f, energy_pp0_pkg1 %.3f\n", energy_pkg1, energy_pp0_pkg1);
             ic_measure("UNCORE_ENERGY_PACKAGE");
             ic_double("UNCORE_ENERGY:PACKAGE1(J)", energy_pkg1 - energy_pp0_pkg1);
-            ic_measureend();
+            ic_measureend(influxdb_timestamp);
 
             ic_measure("UNCORE_POWER_PACKAGE");
             ic_double("UNCORE_POWER:PACKAGE1(W)", power_pkg1 - power_pp0_pkg1);
-            ic_measureend();
+            ic_measureend(influxdb_timestamp);
 
             events_to_send += 1;
         }
