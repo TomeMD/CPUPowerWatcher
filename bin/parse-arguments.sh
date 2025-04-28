@@ -3,7 +3,7 @@
 function usage {
   cat << EOF
 Usage: $(basename "$0") [OPTIONS]
-  -v, --os-virt             Technology for OS-level virtualization. [Default]
+  -v, --os-virt             Technology for OS-level virtualization. [Default: apptainer]
                                 docker
                                 apptainer
   -i, --influxdb-host       InfluxDB host to send metrics. [Default: montoxo.des.udc.es]
@@ -22,9 +22,12 @@ Usage: $(basename "$0") [OPTIONS]
                                 --spark-data-dir  Directory to store Spark temporary files and Spark Smusket input.
                                                   Input must be a FASTQ file named "input.fastq".
 
-                              stress-system       Run stress tests using stress-system tool. Options:
+                              stress-system       Run stress tests using stress-system tool with different sets of
+                                                  cores. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
+                                --stress-time            Time (in seconds) under stress for each set of cores.
+                                                         [Default: 120]
                                 --stress-load-types      Comma-separated list of types of load to stress the CPU.
                                                          Used together with CPU stressor. [Default: all]
                                 --stress-extra-options   Comma-separated list of other stress-ng options specified
@@ -44,35 +47,39 @@ exit 1
 while [[ $# -gt 0 ]]; do
   case $1 in
     -v|--os-virt)
-      OS_VIRT="$2"
+      OS_VIRT="${2}"
       shift 2
       ;;
     -i|--influxdb-host)
-      INFLUXDB_HOST="$2"
+      INFLUXDB_HOST="${2}"
       shift 2
       ;;
     -b|--influxdb-bucket)
-      INFLUXDB_BUCKET="$2"
+      INFLUXDB_BUCKET="${2}"
       shift 2
       ;;
     -w|--workload)
-      WORKLOAD="$2"
+      WORKLOAD="${2}"
       shift 2
       ;;
     --fio-target)
-      FIO_TARGET="$2"
+      FIO_TARGET="${2}"
       shift 2
       ;;
     --spark-data-dir)
-      SPARK_DATA_DIR="$2"
+      SPARK_DATA_DIR="${2}"
       shift 2
       ;;
     --stressors)
-      STRESSORS="$2"
+      STRESSORS="${2}"
+      shift 2
+      ;;
+    --stress-time)
+      STRESS_TIME="${2}"
       shift 2
       ;;
     --stress-load-types)
-      LOAD_TYPES="$2"
+      LOAD_TYPES="${2}"
       shift 2
       ;;
     --stress-extra-options)
@@ -81,7 +88,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -o|--output)
-      LOG_DIR="$2"
+      LOG_DIR="${2}"
       shift 2
       ;;
     --base)
@@ -94,8 +101,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     --custom-tests)
       CUSTOM_TESTS=1
-      if [ -n "$2" ];then
-        CUSTOM_TESTS_FILE="$2"
+      if [ -n "${2}" ];then
+        CUSTOM_TESTS_FILE="${2}"
         shift 2
       else
         shift 1
@@ -105,7 +112,7 @@ while [[ $# -gt 0 ]]; do
       usage
       ;;
     *)
-    echo "Unknown option: $1"
+    echo "Unknown option: ${1}"
       exit 1
       ;;
   esac

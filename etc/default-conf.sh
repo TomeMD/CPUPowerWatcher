@@ -2,6 +2,7 @@ export LOG_DIR="${GLOBAL_HOME}"/log
 export OS_VIRT="apptainer"
 export WORKLOAD="stress-system"
 export STRESSORS="cpu"
+export STRESS_TIME=120
 export LOAD_TYPES="all"
 export STRESS_EXTRA_OPTS=""
 export STRESS_EXTRA_OPTS_ARRAY=()

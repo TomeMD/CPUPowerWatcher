@@ -49,8 +49,9 @@ function print_conf() {
     m_echo "OS Virtualization Technology = ${OS_VIRT}"
     m_echo "Workload = ${WORKLOAD}"
     if [ "${WORKLOAD}" == "stress-system" ]; then
-      m_echo "Stress-system stressors = [${STRESSORS}]"
-      m_echo "CPU Stressor Load Types = [${LOAD_TYPES}]"
+      m_echo "\tStressors = [${STRESSORS}]"
+      m_echo "\tCPU stress time = ${STRESS_TIME}s"
+      m_echo "\tCPU load types = [${LOAD_TYPES}]"
     fi
     if [ "${ADD_IO_NOISE}" -ne 0 ]; then
       m_echo "Fio target = ${FIO_TARGET}"
@@ -182,7 +183,6 @@ export -f get_bind_from_stress_options
 
 function run_stress-system() {
     local CPU_QUOTA=$(echo "scale=2; ${LOAD} / 100 " | bc)
-    local STRESS_TIME=120
     # Check if we have to set a bind mount for container (e.g., iomix stressor needs to write in host directory)
     local BIND_MOUNT=$(get_bind_from_stress_options)
     # Stress-system does weird things when we specify LOAD < 100 (in this case load is adjusted with CPU quota)
@@ -195,6 +195,7 @@ function run_stress-system() {
     local CONTAINER_OPTS="${BIND_MOUNT}--cpuset-cpus ${CURRENT_CORES} --cpus ${CPU_QUOTA}"
     local STRESS_OPTS="${STRESS_EXTRA_OPTS}-l ${LOAD} -s ${STRESSORS} --cpu-load-types ${LOAD_TYPES} -c ${CURRENT_CORES} -t ${STRESS_TIME} -o /opt"
 
+    # Run stress-system using the appropiate container engine
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
 	if [ "${OS_VIRT}" == "docker" ]; then
 	    m_echo "docker run --rm --name stress-system -v ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS}"
