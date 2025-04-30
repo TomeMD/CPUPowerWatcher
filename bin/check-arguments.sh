@@ -1,14 +1,14 @@
 #!/bin/bash
 
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
-SUPPORTED=0
+SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag")
 
 if [ "${OS_VIRT}" != "docker" ] && [ "${OS_VIRT}" != "apptainer" ]; then
   m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Use 'docker' or 'apptainer'"
   exit 1
 fi
 
-if ! [ -x "$(command -v ${OS_VIRT})" ]; then
+if ! [ -x "$(command -v "${OS_VIRT}")" ]; then
   m_err "OS Virtualization Technology (${OS_VIRT}) is not installed"
   exit 1
 fi
@@ -28,17 +28,44 @@ if [ "${SOCKETS}" -gt "2" ] ; then
   exit 1
 fi
 
+# Check supported workloads
+SUPPORTED=0
 for SUP_WORKLOAD in "${SUPPORTED_WORKLOADS[@]}"; do
     if [ "${SUP_WORKLOAD}" = "${WORKLOAD}" ]; then
         SUPPORTED=1
         break
     fi
 done
-
 if [ "${SUPPORTED}" -eq  "0" ]; then
     m_err "Workload (${WORKLOAD}) not supported. Supported workloads [${SUPPORTED_WORKLOADS[*]}]"
     exit 1
 fi
+
+if [ "${WORKLOAD}" == "stress-system" ]; then
+  # Check supported patterns
+  SUPPORTED=0
+  for SUP_PATTERN in "${SUPPORTED_PATTERNS[@]}"; do
+      if [ "${SUP_PATTERN}" = "${STRESS_PATTERN}" ]; then
+          SUPPORTED=1
+          break
+      fi
+  done
+  if [ "${SUPPORTED}" -eq  "0" ]; then
+      m_err "Pattern (${STRESS_PATTERN}) not supported. Supported patterns [${SUPPORTED_PATTERNS[*]}]"
+      exit 1
+  fi
+
+  if [ "${STRESS_TIME}" -le "0" ] ; then
+    m_err "Time under stress must be a positive number greater than zero (current value is ${STRESS_TIME})"
+    exit 1
+  fi
+
+  if [ "${IDLE_TIME}" -lt "0" ] ; then
+    m_err "CPU idle time between tests can't be negative (current value is ${IDLE_TIME})"
+    exit 1
+  fi
+fi
+
 
 if [ "${WORKLOAD}" == "spark" ]; then
   if [ ! -d "${SPARK_DATA_DIR}" ]; then

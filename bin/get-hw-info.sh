@@ -4,6 +4,7 @@ export PHY_CORES_PER_CPU=$(lscpu | grep "Core(s) per socket:" | awk '{print $4}'
 export SOCKETS=$(lscpu | grep "Socket(s):" | awk '{print $2}')
 export THREADS=$(nproc)
 export THEORETICAL_THREADS=$((PHY_CORES_PER_CPU * SOCKETS * 2))
+export MAX_SUPPORTED_LOAD=$(( THREADS * 100 ))
 
 export MULTITHREADING_SUPPORT="FULLY SUPPORTED"
 if [ "${THREADS}" -lt "${THEORETICAL_THREADS}" ]; then

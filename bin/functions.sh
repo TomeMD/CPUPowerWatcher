@@ -50,7 +50,9 @@ function print_conf() {
     m_echo "Workload = ${WORKLOAD}"
     if [ "${WORKLOAD}" == "stress-system" ]; then
       m_echo "\tStressors = [${STRESSORS}]"
+      m_echo "\tCPU stress pattern = ${STRESS_PATTERN}"
       m_echo "\tCPU stress time = ${STRESS_TIME}s"
+      m_echo "\tCPU idle time = ${IDLE_TIME}s"
       m_echo "\tCPU load types = [${LOAD_TYPES}]"
     fi
     if [ "${ADD_IO_NOISE}" -ne 0 ]; then
@@ -63,7 +65,9 @@ function print_conf() {
     m_echo "\tPhysical cores per socket: ${PHY_CORES_PER_CPU}"
     m_echo "\tNumber of sockets: ${SOCKETS}"
     m_echo "\tNumber of threads: ${THREADS}"
+    m_echo "\tMaximum supported load: ${MAX_SUPPORTED_LOAD}"
     m_echo "\tMultithreading support: ${MULTITHREADING_SUPPORT}"
+    m_echo "\tCores with multithreading: (${CORES_WITH_MULTITHREADING[*]})"
     m_echo "Writing output to ${LOG_FILE}"
 }
 
@@ -162,6 +166,31 @@ function stop_cpu_monitor() {
 
 export -f stop_cpu_monitor
 
+function get_str_list_from_array() {
+  local ARRAY=("${@}")
+  local MSG=""
+  for ((i = 0; i < ${#ARRAY[@]}; i += 1)); do
+    # Add new cores to the list
+    if [ -z "${MSG}" ]; then
+      MSG+="${ARRAY[i]}"
+    else
+      MSG+=",${ARRAY[i]}"
+    fi
+  done
+  echo "${MSG}"
+}
+
+export -f get_str_list_from_array
+
+function idle_cpu() {
+	print_timestamp "IDLE START"
+	sleep 30
+	print_timestamp "IDLE STOP"
+	sleep 5
+}
+
+export -f idle_cpu
+
 function get_bind_from_stress_options() {
   local BIND_MOUNT=""
   if [ -n "${STRESS_EXTRA_OPTS}" ]; then
@@ -215,7 +244,7 @@ function run_stress-system() {
 	# Reset LOAD to its original value
 	LOAD="${OLD_LOAD}"
 
-	sleep 20
+	sleep "${IDLE_TIME}"
 }
 
 export -f run_stress-system
@@ -338,74 +367,145 @@ function run_fio() {
 
 export -f run_fio
 
-function idle_cpu() {
-	print_timestamp "IDLE START"
-	sleep 30
-	print_timestamp "IDLE STOP"
-	sleep 5
-}
-
-export -f idle_cpu
-
-function run_seq_experiment() {
-  NAME=$1
-  TEST_FUNCTION=$2
-  CURRENT_CORES=$3
-
-  local START_TEST=$(date +%s%N)
-
-  # Start monitoring agent and move to current core
-  # start_cpu_monitor
-  if [ -n "${CPU_MONITOR_PID}" ]; then
-    taskset -cp "${CURRENT_CORES}" "${CPU_MONITOR_PID}"
-    m_echo "Changed CPU monitor (pid = ${CPU_MONITOR_PID}) affinity to core ${CURRENT_CORES}"
+function run_stairs-up() {
+  # Get arguments
+  NAME="${1}"
+  local WORKLOAD_FUNCTION="${2}"
+  local INITIAL_LOAD="${3}"
+  local LOAD_JUMP="${4}"
+  shift 4
+  local CORES_DISTRIBUTION=("$@")
+  local MAX_LOAD=$(( ${#CORES_DISTRIBUTION[@]} * 100 ))
+  if [ "${INITIAL_LOAD}" -gt "${MAX_LOAD}" ]; then
+    m_warn "Trimming initial load from ${INITIAL_LOAD} to ${MAX_LOAD}"
+    INITIAL_LOAD="${MAX_LOAD}"
   fi
 
-  # Incrementally stress core
-  LOAD=10
-  while [ "${LOAD}" -le "100" ]; do
-    # Stress CPU core
-    "${TEST_FUNCTION}"
-    # Increase load
-    LOAD=$((LOAD + 10))
-  done
+  m_echo "Experiment ${NAME}:"
+  m_echo "\tStress pattern = stairs-up"
+  m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
+  m_echo "\tInitial CPU load = ${INITIAL_LOAD}"
+  m_echo "\tLoad jump between iterations = +${LOAD_JUMP} (increase)"
 
-  # Stop monitoring agent
-  # stop_cpu_monitor
-
-  local END_TEST=$(date +%s%N)
-  print_time "${START_TEST}" "${END_TEST}"
-}
-
-export -f run_seq_experiment
-
-function run_experiment() {
-  NAME=$1
-  TEST_FUNCTION=$2
-  shift 2
-  CORES_ARRAY=("$@")
-
-  CURRENT_CORES=""
-  LOAD=100
+  # Run tests following an ascending staircase pattern
+  LOAD=${INITIAL_LOAD}
   local START_TEST=$(date +%s%N)
-  for ((i = 0; i < ${#CORES_ARRAY[@]}; i += 1)); do
-    # Add new cores to the list
-    if [ -z "${CURRENT_CORES}" ]; then
-      CURRENT_CORES+="${CORES_ARRAY[i]}"
-    else
-      CURRENT_CORES+=",${CORES_ARRAY[i]}"
-    fi
-    # Start daemon to monitor CPU (usage, frequency,...)
-    # start_cpu_monitor
+  while [ "${LOAD}" -le "${MAX_LOAD}" ]; do
+    # We need 1 core for 1-100 CPU load, 2 for 101-200, 3 for 201-300...
+    NEEDED_CORES=$(( (LOAD + 99) / 100 ))
+
+    # Get first NEEDED_CORES cores from CORES_DISTRIBUTION list
+    CURRENT_CORES=$(get_str_list_from_array ${CORES_DISTRIBUTION[@]:0:${NEEDED_CORES}})
+
     # Run workload
-    "${TEST_FUNCTION}"
-    # Stop monitoring daemon
-    # stop_cpu_monitor
+    "${WORKLOAD_FUNCTION}"
+
     # Increase load for next iteration
-    LOAD=$((LOAD + 100))
+    LOAD=$((LOAD + LOAD_JUMP))
   done
   local END_TEST=$(date +%s%N)
   print_time "${START_TEST}" "${END_TEST}"
 }
 
-export -f run_experiment
+export -f run_stairs-up
+
+function run_stairs-down() {
+  # Get arguments
+  NAME="${1}"
+  local WORKLOAD_FUNCTION="${2}"
+  local INITIAL_LOAD="${3}"
+  local LOAD_JUMP="${4}"
+  shift 4
+  local CORES_DISTRIBUTION=("$@")
+  local MAX_LOAD=$(( ${#CORES_DISTRIBUTION[@]} * 100 ))
+  if [ "${INITIAL_LOAD}" -gt "${MAX_LOAD}" ]; then
+    m_warn "Trimming initial load from ${INITIAL_LOAD} to ${MAX_LOAD}"
+    INITIAL_LOAD="${MAX_LOAD}"
+  fi
+
+  m_echo "Experiment ${NAME}:"
+  m_echo "\tStress pattern = stairs-down"
+  m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
+  m_echo "\tInitial CPU load = ${INITIAL_LOAD}"
+  m_echo "\tLoad jump between iterations = -${LOAD_JUMP} (decrease)"
+
+  # Run tests following a descending staircase pattern
+  LOAD=${INITIAL_LOAD}
+  local START_TEST=$(date +%s%N)
+  while [ "${LOAD}" -gt "0" ]; do
+    # We need 1 core for 1-100 CPU load, 2 for 101-200, 3 for 201-300...
+    NEEDED_CORES=$(( (LOAD + 99) / 100 ))
+
+    # Get first NEEDED_CORES cores from CORES_DISTRIBUTION list
+    CURRENT_CORES=$(get_str_list_from_array ${CORES_DISTRIBUTION[@]:0:${NEEDED_CORES}})
+
+    # Run workload
+    "${WORKLOAD_FUNCTION}"
+
+    # Decrease load for next iteration
+    LOAD=$((LOAD - LOAD_JUMP))
+  done
+  local END_TEST=$(date +%s%N)
+  print_time "${START_TEST}" "${END_TEST}"
+}
+
+export -f run_stairs-down
+
+
+function run_zigzag() {
+  # Get arguments
+  NAME="${1}"
+  local WORKLOAD_FUNCTION="${2}"
+  local INITIAL_LOAD="${3}"
+  local INITIAL_JUMP="${4}"
+  local JUMP_DECREASE="${5}"
+  local INITIAL_DIRECTION="${6}" # 0 decrease, 1 (or other) increase
+  shift 6
+  local CORES_DISTRIBUTION=("$@")
+  local MAX_LOAD=$(( ${#CORES_DISTRIBUTION[@]} * 100 ))
+  if [ "${INITIAL_LOAD}" -gt "${MAX_LOAD}" ]; then
+    m_warn "Trimming initial load from ${INITIAL_LOAD} to ${MAX_LOAD}"
+    INITIAL_LOAD="${MAX_LOAD}"
+  fi
+  if [ "${INITIAL_JUMP}" -ge "${MAX_LOAD}" ]; then
+    m_warn "Trimming initial jump from ${INITIAL_JUMP} to $((MAX_LOAD - 100))"
+    INITIAL_JUMP="$((MAX_LOAD - 100))"
+  fi
+
+  m_echo "Experiment ${NAME}:"
+  m_echo "\tStress pattern = zigzag"
+  m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
+  m_echo "\tInitial CPU load = ${INITIAL_LOAD}"
+  m_echo "\tInitial jump between iterations = ${INITIAL_JUMP} ($([ ${INITIAL_DIRECTION} -eq 0 ] && echo 'decrease' || echo 'increase'))"
+  m_echo "\tJump decrease between iterations = -${JUMP_DECREASE}"
+
+  # Run tests following a zigzag pattern
+  LOAD=${INITIAL_LOAD}
+  local LOAD_JUMP=${INITIAL_JUMP}
+  local JUMP_DIRECTION="${INITIAL_DIRECTION}"
+  local START_TEST=$(date +%s%N)
+  while [ "${LOAD}" -gt "0" ] && [ "${LOAD}" -le "${MAX_LOAD}" ] && [ "${LOAD_JUMP}" -ge "0" ]; do
+    # We need 1 core for 1-100 CPU load, 2 for 101-200, 3 for 201-300...
+    NEEDED_CORES=$(( (LOAD + 99) / 100 ))
+
+    # Get first NEEDED_CORES cores from CORES_DISTRIBUTION list
+    CURRENT_CORES=$(get_str_list_from_array ${CORES_DISTRIBUTION[@]:0:${NEEDED_CORES}})
+
+    # Run workload
+    "${WORKLOAD_FUNCTION}"
+
+    # Increase or decrease load for next iteration
+    if [ "${JUMP_DIRECTION}" -eq 0 ]; then
+      LOAD=$((LOAD - LOAD_JUMP))
+      JUMP_DIRECTION=1
+    else
+      LOAD=$((LOAD + LOAD_JUMP))
+      JUMP_DIRECTION=0
+    fi
+    LOAD_JUMP=$((LOAD_JUMP - JUMP_DECREASE))
+  done
+  local END_TEST=$(date +%s%N)
+  print_time "${START_TEST}" "${END_TEST}"
+}
+
+export -f run_zigzag

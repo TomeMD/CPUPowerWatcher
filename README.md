@@ -75,12 +75,17 @@ Usage: run.sh [OPTIONS]
                                 --spark-data-dir  Directory to store Spark temporary files and Spark Smusket input.
                                                   Input must be a FASTQ file named "input.fastq".
 
-                              stress-system       Run stress tests using stress-system tool with different sets of
-                                                  cores. Options:
+                              stress-system       Run stress tests using stress-system tool and different core
+                                                  distributions. In addition, the tool can follow different patterns
+                                                  to gradually use all cores from core distribution. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
-                                --stress-time            Time (in seconds) under stress for each set of cores.
+                                --stress-pattern         Pattern followed to get groups of cores from the core distribution.
+                                                         Patterns: stairs-up, stairs-down or zigzag [Default: stairs-up]
+                                --stress-time            Time (in seconds) under stress for each group of cores.
                                                          [Default: 120]
+                                --idle-time              Time (in seconds) to keep the CPU idle between one group of
+                                                         cores and the next one. [Default: 20]
                                 --stress-load-types      Comma-separated list of types of load to stress the CPU.
                                                          Used together with CPU stressor. [Default: all]
                                 --stress-extra-options   Comma-separated list of other stress-ng options specified

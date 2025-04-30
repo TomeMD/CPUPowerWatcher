@@ -29,7 +29,26 @@ elif [ "${WORKLOAD}" == "spark" ]; then
   . "${TEST_DIR}"/spark-tests.sh
 elif [ "${WORKLOAD}" == "fio" ]; then
   . "${TEST_DIR}"/fio-tests.sh
-else
+elif [ "${WORKLOAD}" == "stress-system" ]; then
+
+  # Set parameters for the specified pattern
+  if [ "${STRESS_PATTERN}" = "stairs-up" ]; then
+    # <INITIAL_LOAD> <LOAD_JUMP>
+    export SINGLE_CORE_PARAMETERS=("10" "10")
+    export PARAMETERS=("100" "100")
+  elif [ "${STRESS_PATTERN}" = "stairs-down" ]; then
+    # <INITIAL_LOAD> <LOAD_JUMP>
+    export SINGLE_CORE_PARAMETERS=("100" "10")
+    export PARAMETERS=("${MAX_SUPPORTED_LOAD}" "100")
+  elif [ "${STRESS_PATTERN}" = "zigzag" ]; then
+    # <INITIAL_LOAD> <INITIAL_JUMP> <JUMP_DECREASE> <INITIAL_DIRECTION>
+    # Start at 100, decrease 90 to 10, increase 80 to 90, decrease 70 to 20...
+    export SINGLE_CORE_PARAMETERS=("100" "90" "10" "0")
+    # Start at maximum, decrease 'maximum - 100' to 100, increase 'maximum - 200' to 'maximum - 100'...
+    export PARAMETERS=("${MAX_SUPPORTED_LOAD}" "$((MAX_SUPPORTED_LOAD - 100))" "100" "0")
+  fi
+
+  # Run different tests for single-socket CPUs and multi-socket CPUs
   if [ "${SOCKETS}" -eq "1" ]; then
     . "${TEST_DIR}"/tests-singlesocket.sh
   elif [ "${SOCKETS}" -eq "2" ]; then
