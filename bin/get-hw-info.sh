@@ -20,7 +20,8 @@ declare -A FIRST_CORE_SOCKET
 # CORES_DICT stores each physical core as key and its logical cores as value
 declare -A CORES_DICT
 
-output=$(lscpu -e | awk 'NR > 1 { print $1, $3, $4 }')
+export CORES_WITH_MULTITHREADING=()
+OUTPUT=$(lscpu -e | awk 'NR > 1 { print $1, $3, $4 }')
 while read -r CPU SOCKET CORE; do
     # First core will be the lowest number found for each socket
     if [ -z "${FIRST_CORE_SOCKET[${SOCKET}]}" ]; then
@@ -29,12 +30,14 @@ while read -r CPU SOCKET CORE; do
         FIRST_CORE_SOCKET[${SOCKET}]="${CORE}"
     fi
 
-    # We use KEY to index by socket and cores, as bash doesn't support nested dictionaries
+    # We use KEY to index by socket and cores, as bash does not support nested dictionaries
     KEY="$SOCKET:$CORE"
     if [ -z "${CORES_DICT[${KEY}]}" ]; then
         CORES_DICT["${KEY}"]="$CPU"
     else
         CORES_DICT["${KEY}"]="${CORES_DICT[${KEY}]},$CPU"
+        CORES_WITH_MULTITHREADING+=("${CORE}")
+        # PHYSICAL CORES WITH MULTITHREDING += 1
     fi
-done <<< "$output"
+done <<< "${OUTPUT}"
 
