@@ -1,28 +1,8 @@
 # CPUPowerWatcher
-CPUPowerWatcher automate CPU monitoring and time series storage while running workloads. 
 
-<br><p align="center"><img src="./docs/logo.svg"/></p>
+<p align="center"><img src="./docs/logo.svg"/></p>
 
-Supported metrics:
-| Metric          | Description                                              |
-| --------------- | -------------------------------------------------------- |
-| 🔋 CPU power     | Real-time CPU power consumption measured with `RAPL_PKG` |
-| 📊 CPU usage     | User, system and iowait CPU load                         |
-| ⏱️ CPU frequency | Current operating frequency per core                     |
-| 💤 CPU C-States  | CPU sleep and idle state information                     |
-| ⚡️ CPU voltage   | Core voltage readings from CPU MSRs (vCore)              |
-
-Supported workloads:
-| Workload                      | Description                                                  |
-| ----------------------------- | ------------------------------------------------------------ |
-| NAS Parallel Benchmarks (NPB) | Kernels IS, FT, CG, MG, BT, BT I/O, scaling cores 1, 2, 4, ... to maximum |
-| Fio                           | I/O benchmark scaling cores 1, 2, 4, ... to maximum          |
-| SMusket                       | DNA error correction using Spark Standalone scaling cores 1, 2, 4, ... to maximum |
-| stress-system                 | Run stress-ng using different sets of cores (e.g., 1st cores 1,3,5, then cores 2,4,7,8) |
-| Sysbench                      | General system benchmark (deprecated)                        |
-| Geekbench                     | Cross-platform benchmark suite (deprecated)                  |
-
-
+CPUPowerWatcher provides a framework to automate CPU monitoring and time series storage while running workloads. The main (but not necessarily the only) purpose of this framework is to generate and collect datasets for the training and testing phases of power consumption models. It is recommended to use the 'stress-system' workload for the training phase, as it allows the tuning of different stress parameters such as the stress pattern, time under stress or the type of operations executed on the CPU, among others.
 
 ## Prerequisites
 The system must meet the following requirements:
@@ -54,7 +34,30 @@ Then, you can run CPUPowerWatcher just using `run.sh`.
 
 ## Options
 
-````shell
+### Supported metrics
+
+| Metric          | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| 🔋 CPU power     | Real-time CPU power consumption measured with `RAPL_PKG` |
+| 📊 CPU usage     | User, system and iowait CPU load                         |
+| ⏱️ CPU frequency | Current operating frequency per core                     |
+| 💤 CPU C-States  | CPU sleep and idle state information                     |
+| ⚡️ CPU voltage   | Core voltage readings from CPU MSRs (vCore)              |
+
+### Supported workloads
+
+| Workload                      | Description                                                  |
+| ----------------------------- | ------------------------------------------------------------ |
+| NAS Parallel Benchmarks (NPB) | Kernels IS, FT, CG, MG, BT, BT I/O, scaling cores 1, 2, 4, ... to maximum |
+| Fio                           | I/O benchmark scaling cores 1, 2, 4, ... to maximum          |
+| SMusket                       | DNA error correction using Spark Standalone scaling cores 1, 2, 4, ... to maximum |
+| stress-system                 | Run stress-ng using different sets of cores (e.g., 1st cores 1,3,5, then cores 2,4,7,8) |
+| Sysbench                      | General system benchmark (deprecated)                        |
+| Geekbench                     | Cross-platform benchmark suite (deprecated)                  |
+
+
+For more detail use the `--help` option:
+```shell
 ~$ ./run.sh --help
 
 Usage: run.sh [OPTIONS]
@@ -100,7 +103,7 @@ Usage: run.sh [OPTIONS]
   --custom-tests <file>    Use custom tests file to create custom lists of cores to stress.
                            [Default: ./bin/test/custom-tests.sh]
   -h, --help               Show this help and exit
-````
+```
 
 
 
