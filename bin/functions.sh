@@ -338,31 +338,28 @@ export -f run_spark
 
 function run_fio() {
   CORES_ARRAY=("$@")
-	NUM_THREADS=1
-	MAX_THREADS=8
-	while [ "${NUM_THREADS}" -le "${MAX_THREADS}" ]
-	do
-	  FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS} --runtime=30h --time_based"
-		set_n_cores ${NUM_THREADS}
-		# start_cpu_monitor
-		print_timestamp "FIO (CORES = ${CURRENT_CORES}) START"
+  NUM_THREADS=1
+  MAX_THREADS=8
+  while [ "${NUM_THREADS}" -le "${MAX_THREADS}" ]; do
+    FIO_OPTIONS="--name=fio_job --directory=/tmp --bs=4k --size=10g --rw=randrw --iodepth=64 --numjobs=${NUM_THREADS} --runtime=30h --time_based"
+    set_n_cores ${NUM_THREADS}
+    print_timestamp "FIO (CORES = ${CURRENT_CORES}) START"
     if [ "${OS_VIRT}" == "docker" ]; then
       docker run -d --rm --cpuset-cpus "${CURRENT_CORES}" --name fio -v "${FIO_TARGET}":/tmp ljishen/fio:latest ${FIO_OPTIONS}
     else
       sudo apptainer instance start --cpuset-cpus "${CURRENT_CORES}" -B "${FIO_TARGET}":/tmp "${FIO_HOME}"/fio.sif fio ${FIO_OPTIONS}
     fi
     sleep 300
-		print_timestamp "FIO (CORES = ${CURRENT_CORES}) STOP"
+    print_timestamp "FIO (CORES = ${CURRENT_CORES}) STOP"
     if [ "${OS_VIRT}" == "docker" ]; then
       docker stop fio
     else
       sudo apptainer instance stop fio
     fi
-		# stop_cpu_monitor
-		rm -rf "${FIO_TARGET}"/fio_job*
-		NUM_THREADS=$(( NUM_THREADS * 2 ))
-		sleep 30
-	done
+    rm -rf "${FIO_TARGET}"/fio_job*
+    NUM_THREADS=$(( NUM_THREADS * 2 ))
+    sleep 30
+  done
 }
 
 export -f run_fio
