@@ -1,14 +1,16 @@
 # CPUPowerWatcher
 CPUPowerWatcher automate CPU monitoring and time series storage while running workloads. 
 
+<br><p align="center"><img src="./docs/logo.svg"/></p>
+
 Supported metrics:
-| Metric        | Description                                              |
-| ------------- | -------------------------------------------------------- |
-| CPU power     | Real-time CPU power consumption measured with `RAPL_PKG` |
-| CPU usage     | User, system and iowait CPU load                         |
-| CPU frequency | Current operating frequency per core                     |
-| CPU C-States  | CPU sleep and idle state information                     |
-| CPU voltage   | Core voltage readings from CPU MSRs (vCore)              |
+| Metric          | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| 🔋 CPU power     | Real-time CPU power consumption measured with `RAPL_PKG` |
+| 📊 CPU usage     | User, system and iowait CPU load                         |
+| ⏱️ CPU frequency | Current operating frequency per core                     |
+| 💤 CPU C-States  | CPU sleep and idle state information                     |
+| ⚡️ CPU voltage   | Core voltage readings from CPU MSRs (vCore)              |
 
 Supported workloads:
 | Workload                      | Description                                                  |
