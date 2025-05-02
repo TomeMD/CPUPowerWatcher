@@ -1,6 +1,4 @@
-# CPUPowerWatcher
-
-<p align="center"><img src="./docs/logo.png"/></p>
+<p align="center" style="zoom:33%;"><img src="./docs/logo.png" style="height: 350px; width: 350px"/></p>
 
 CPUPowerWatcher provides a framework to automate CPU monitoring and time series storage while running workloads. The main purpose of this framework is to generate and collect datasets for the training and testing phases of power consumption models. It is recommended to use the 'stress-system' workload for the training phase, as it allows the tuning of different stress parameters such as the stress pattern, time under stress or the type of operations executed on the CPU, among others.
 
