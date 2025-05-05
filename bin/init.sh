@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 FULL_CORES_LIST=$(get_comma_separated_list 0 "${THREADS}")
 

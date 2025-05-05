@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Only one socket, so socket will always be 0
 SOCKET=0

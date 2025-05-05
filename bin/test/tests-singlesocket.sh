@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 . "${TEST_DIR}"/get-cores-lists-singlesocket.sh
 

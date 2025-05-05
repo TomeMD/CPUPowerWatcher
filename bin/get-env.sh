@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Global directories
 export BIN_DIR="${GLOBAL_HOME}"/bin

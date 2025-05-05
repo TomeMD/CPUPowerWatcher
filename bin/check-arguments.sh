@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
 SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag")

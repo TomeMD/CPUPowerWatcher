@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 BASE_MEASURE_TIME=240
 RAPL_SAMPLING_FREQUENCY=5

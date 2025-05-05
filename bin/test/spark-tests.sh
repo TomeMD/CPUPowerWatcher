@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 STR_LIST=$(get_comma_separated_list 0 "${THREADS}")
 IFS=',' read -ra SEQUENTIAL_CORES <<< "${STR_LIST}"

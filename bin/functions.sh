@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 function get_date {
     DATE=`date '+%d/%m/%Y %H:%M:%S'`

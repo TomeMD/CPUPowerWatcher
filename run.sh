@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export GLOBAL_HOME=$(dirname -- "$(readlink -f -- "${BASH_SOURCE}")")
 

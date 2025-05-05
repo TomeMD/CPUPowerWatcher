@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 m_echo "Closing environment"
 if [ "${OS_VIRT}" == "docker" ]; then

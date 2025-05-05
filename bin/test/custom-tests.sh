@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Custom tests file to stress only each socket separated from a multisocket server with 2 CPUs
 # Core numbering of the target server is:
 #   0-15 physical cores CPU0
