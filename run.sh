@@ -25,6 +25,9 @@ trap cleanup SIGINT SIGTERM
 CLEANUP_DONE=0
 
 (
+  # Set strict error control
+  set -euo pipefail
+
   # Run workload
   . "${BIN_DIR}"/run-workload.sh
 
@@ -32,4 +35,6 @@ CLEANUP_DONE=0
   . "${BIN_DIR}"/finish.sh
 ) &
 
-wait $!
+if ! wait $!; then
+  cleanup
+fi
