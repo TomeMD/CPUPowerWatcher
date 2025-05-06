@@ -99,7 +99,7 @@ Usage: run.sh [OPTIONS]
                            workload. Use --fio-target to specify target directory. This option is not compatible with
                            fio tests.
   --custom-tests <file>    Use custom tests file to create custom lists of cores to stress.
-                           [Default: ./bin/test/custom-tests.sh]
+                           [Default: ./bin/test/stress-tests-custom.sh]
   -h, --help               Show this help and exit
 ```
 

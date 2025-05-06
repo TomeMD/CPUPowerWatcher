@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Load core distributions for single-socket CPUs
 . "${TEST_DIR}"/get-cores-lists-singlesocket.sh
 
 # Initial wait

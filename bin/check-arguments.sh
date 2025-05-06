@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+show_logo
+
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
-SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag")
+SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag" "uniform")
 
 if [ "${OS_VIRT}" != "docker" ] && [ "${OS_VIRT}" != "apptainer" ]; then
   m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Use 'docker' or 'apptainer'"
@@ -63,6 +65,11 @@ if [ "${WORKLOAD}" == "stress-system" ]; then
   if [ "${IDLE_TIME}" -lt "0" ] ; then
     m_err "CPU idle time between tests can't be negative (current value is ${IDLE_TIME})"
     exit 1
+  fi
+
+  if [ "${STRESS_PATTERN}" = "uniform" ] && [ "${IDLE_TIME}" -gt "0" ]; then
+    m_warn "Idle time must be 0 when using uniform stress pattern (if greater than 0 it adds bias to the distribution). Trimming idle time from ${IDLE_TIME} to 0."
+    IDLE_TIME=0
   fi
 fi
 

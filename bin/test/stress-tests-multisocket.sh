@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Load core distributions for multi-socket CPUs
 . "${TEST_DIR}"/get-cores-lists-multisocket.sh
 
 # Initial wait
@@ -18,7 +19,6 @@ TIMESTAMPS_FILE=${LOG_DIR}/Single_Core.timestamps
 # Group_P: Only physical cores, one CPU at a time.
 ################################################################################################
 TIMESTAMPS_FILE=${LOG_DIR}/Group_P.timestamps
-echo "${GROUP_P_CORES[*]}"
 "run_${STRESS_PATTERN}" "Group_P" "run_${WORKLOAD}" "${PARAMETERS[@]}" "${GROUP_P_CORES[@]}"
 
 ################################################################################################
