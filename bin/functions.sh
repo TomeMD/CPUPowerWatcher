@@ -8,24 +8,24 @@ export -f get_date
 
 function m_echo() {
     get_date
-    echo -e "\e[48;5;2m[$DATE INFO]\e[0m $@"
-    echo "$DATE > $@" >> "${LOG_FILE}"
+    echo -e "\e[48;5;2m[${DATE} INFO]\e[0m ${@}"
+    echo -e "${DATE} > ${@}" >> "${LOG_FILE}"
 }
 
 export -f m_echo
 
 function m_err() {
     get_date
-    echo -e "\e[48;5;1m[$DATE ERR]\e[0m $@" >&2
-    echo "$DATE > $@" >> "${LOG_FILE}"
+    echo -e "\e[48;5;1m[${DATE} ERR]\e[0m ${@}" >&2
+    echo -e "${DATE} > ${@}" >> "${LOG_FILE}"
 }
 
 export -f m_err
 
 function m_warn() {
     get_date
-    echo -e "\e[48;5;208m[$DATE WARN]\e[0m $@"
-    echo "$DATE > $@" >> "${LOG_FILE}"
+    echo -e "\e[48;5;208m[${DATE} WARN]\e[0m ${@}"
+    echo -e "${DATE} > ${@}" >> "${LOG_FILE}"
 }
 
 export -f m_warn
