@@ -3,7 +3,8 @@
 show_logo
 
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
-SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag" "uniform")
+SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag" "uniform" "udrt")
+IDLE_SENSITIVE_PATTERNS=("uniform" "udrt")
 
 if [ "${OS_VIRT}" != "docker" ] && [ "${OS_VIRT}" != "apptainer" ]; then
   m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Use 'docker' or 'apptainer'"
@@ -67,8 +68,15 @@ if [ "${WORKLOAD}" == "stress-system" ]; then
     exit 1
   fi
 
-  if [ "${STRESS_PATTERN}" = "uniform" ] && [ "${IDLE_TIME}" -gt "0" ]; then
-    m_warn "Idle time must be 0 when using uniform stress pattern (if greater than 0 it adds bias to the distribution). Trimming idle time from ${IDLE_TIME} to 0."
+  SENSITIVE=0
+  for SENSITIVE_PATTERN in "${IDLE_SENSITIVE_PATTERNS[@]}"; do
+    if [ "${SENSITIVE_PATTERN}" = "${STRESS_PATTERN}" ]; then
+      SENSITIVE=1
+      break
+    fi
+  done
+  if [ "${SENSITIVE}" -eq "1" ]  && [ "${IDLE_TIME}" -gt "0" ]; then
+    m_warn "Idle time must be 0 when using pattern ${STRESS_PATTERN} (if greater than 0 it adds bias to the distribution). Trimming idle time from ${IDLE_TIME} to 0."
     IDLE_TIME=0
   fi
 fi

@@ -84,7 +84,7 @@ Usage: run.sh [OPTIONS]
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
                                 --stress-pattern         Pattern followed to get groups of cores from the core distribution.
-                                                         Patterns: stairs-up, stairs-down or zigzag [Default: stairs-up]
+                                                         Patterns: stairs-up, stairs-down, zigzag, uniform or udrt [Default: stairs-up]
                                 --stress-time            Time (in seconds) under stress for each group of cores.
                                                          [Default: 120]
                                 --idle-time              Time (in seconds) to keep the CPU idle between one group of

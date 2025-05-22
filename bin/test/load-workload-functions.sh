@@ -18,10 +18,11 @@ function get_bind_from_stress_options() {
 }
 
 function run_stress-system() {
-    local CPU_QUOTA=$(echo "scale=2; ${LOAD} / 100 " | bc)
     # Check if we have to set a bind mount for container (e.g., iomix stressor needs to write in host directory)
     local BIND_MOUNT=$(get_bind_from_stress_options)
+
     # Stress-system does weird things when we specify LOAD < 100 (in this case load is adjusted with CPU quota)
+    local CPU_QUOTA=$(echo "scale=2; ${LOAD} / 100 " | bc)
     local OLD_LOAD="${LOAD}"
     if [ "${LOAD}" -lt "100" ];then
       LOAD=100
@@ -33,12 +34,12 @@ function run_stress-system() {
 
     # Run stress-system using the appropiate container engine
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) START"
-	if [ "${OLD_LOAD}" -ge "1" ]; then
+	if [ "${OLD_LOAD}" -gt "0" ]; then
       if [ "${OS_VIRT}" == "docker" ]; then
-          m_echo "docker run --rm --name stress-system -v ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS}"
+        m_echo "docker run --rm --name stress-system -v ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS}"
         docker run --rm --name stress-system -v "${STRESS_REPORTS_DIR}:/opt" ${CONTAINER_OPTS} -it stress-system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
       else
-          m_echo "sudo apptainer instance start -B ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} ${STRESS_CONTAINER_DIR}/stress.sif stress_system ${STRESS_OPTS}"
+        m_echo "sudo apptainer instance start -B ${STRESS_REPORTS_DIR}:/opt ${CONTAINER_OPTS} ${STRESS_CONTAINER_DIR}/stress.sif stress_system ${STRESS_OPTS}"
         sudo apptainer instance start -B "${STRESS_REPORTS_DIR}:/opt" ${CONTAINER_OPTS} "${STRESS_CONTAINER_DIR}/stress.sif" stress_system ${STRESS_OPTS} >> "${LOG_FILE}" 2>&1
       fi
     fi

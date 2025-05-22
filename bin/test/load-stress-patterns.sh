@@ -15,7 +15,7 @@ function run_stairs-up() {
   fi
 
   m_echo "Experiment ${NAME}:"
-  m_echo "\tStress pattern = stairs-up"
+  m_echo "\tStress pattern = ${STRESS_PATTERN}"
   m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
   m_echo "\tInitial CPU load = ${INITIAL_LOAD}"
   m_echo "\tLoad jump between iterations = +${LOAD_JUMP} (increase)"
@@ -57,7 +57,7 @@ function run_stairs-down() {
   fi
 
   m_echo "Experiment ${NAME}:"
-  m_echo "\tStress pattern = stairs-down"
+  m_echo "\tStress pattern = ${STRESS_PATTERN}"
   m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
   m_echo "\tInitial CPU load = ${INITIAL_LOAD}"
   m_echo "\tLoad jump between iterations = -${LOAD_JUMP} (decrease)"
@@ -106,7 +106,7 @@ function run_zigzag() {
   fi
 
   m_echo "Experiment ${NAME}:"
-  m_echo "\tStress pattern = zigzag"
+  m_echo "\tStress pattern = ${STRESS_PATTERN}"
   m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
   m_echo "\tInitial CPU load = ${INITIAL_LOAD}"
   m_echo "\tInitial jump between iterations = ${INITIAL_JUMP} ($([ ${INITIAL_DIRECTION} -eq 0 ] && echo 'decrease' || echo 'increase'))"
@@ -149,15 +149,18 @@ function run_uniform() {
   NAME="${1}"
   local WORKLOAD_FUNCTION="${2}"
   local NUM_VALUES="${3}"
-  shift 3
-  local CORES_DISTRIBUTION=("$@")
+  local RANDOM_TIME="${4}"
+  shift 4
+  local CORES_DISTRIBUTION=("${@}")
   local MAX_LOAD=$(( ${#CORES_DISTRIBUTION[@]} * 100 ))
+  local MAX_STRESS="${STRESS_TIME}"
 
   # Generate uniform distribution between 0 and MAX_LOAD to generate NUM_VALUES values
-  mapfile -t LOAD_VALUES < <(python3 -c "import random,sys; num=int(sys.argv[1]); max=int(sys.argv[2]); random.seed(12345); [print(random.randint(0, max)) for _ in range(num)]" "${NUM_VALUES}" "${MAX_LOAD}")
+  #mapfile -t LOAD_VALUES < <("${TEST_DIR}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}" "100" "0.5")
+  mapfile -t LOAD_VALUES < <("${TEST_DIR}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}")
 
   m_echo "Experiment ${NAME}:"
-  m_echo "\tStress pattern = uniform"
+  m_echo "\tStress pattern = ${STRESS_PATTERN}"
   m_echo "\tWorkload function = ${WORKLOAD_FUNCTION}"
   m_echo "\tNumber of values = ${NUM_VALUES}"
 
@@ -170,6 +173,11 @@ function run_uniform() {
     # Get first NEEDED_CORES cores from CORES_DISTRIBUTION list
     CURRENT_CORES=$(get_str_list_from_array ${CORES_DISTRIBUTION[@]:0:${NEEDED_CORES}})
 
+    # If random time is required a random number between 0 and STRESS_TIME is generated as new stress time (UDRT)
+    if [ "${RANDOM_TIME}" -gt "0" ]; then
+      STRESS_TIME=$(( RANDOM % (MAX_STRESS + 1) ))
+    fi
+
     # Run workload
     "${WORKLOAD_FUNCTION}"
   done
@@ -178,3 +186,10 @@ function run_uniform() {
 }
 
 export -f run_uniform
+
+function run_udrt() {
+  # Uniform Distribution with Randomized Times (UDRT)
+  run_uniform "${@}"
+}
+
+export -f run_udrt
