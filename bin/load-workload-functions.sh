@@ -17,6 +17,9 @@ function get_bind_from_stress_options() {
   echo "${BIND_MOUNT}"
 }
 
+###################################################################################################
+# STRESS-SYSTEM WORKLOAD
+###################################################################################################
 function run_stress-system() {
     # Check if we have to set a bind mount for container (e.g., iomix stressor needs to write in host directory)
     local BIND_MOUNT=$(get_bind_from_stress_options)
@@ -60,28 +63,9 @@ function run_stress-system() {
 
 export -f run_stress-system
 
-function run_sysbench() {
-	print_timestamp "SYSBENCH (CORES = ${CURRENT_CORES}) START"
-	if [ "${OS_VIRT}" == "docker" ]; then
-		docker run --rm --name sysbench -it sysbench "${CURRENT_CORES}" >> "${LOG_FILE}" 2>&1
-	else
-		apptainer run "${SYSBENCH_HOME}"/sysbench.sif "${CURRENT_CORES}" >> "${LOG_FILE}" 2>&1
-	fi
-	print_timestamp "SYSBENCH (CORES = ${CURRENT_CORES}) STOP"
-	sleep 15
-}
-
-export -f run_sysbench
-
-function run_geekbench() {
-	print_timestamp "GEEKBENCH (CORES = ${CURRENT_CORES}) START"
-	taskset -c "${CURRENT_CORES}" "${GEEKBENCH_HOME}"/geekbench_x86_64 | tee -a "${LOG_FILE}"
-	print_timestamp "GEEKBENCH (CORES = ${CURRENT_CORES}) STOP"
-	sleep 15
-}
-
-export -f run_geekbench
-
+####################################################################################################
+# NAS PARALLEL BENCHMARK OMP KERNELS
+####################################################################################################
 function run_npb_omp_kernel() {
 	local COMMAND="while true; do ${NPB_OMP_HOME}/${1} | tee -a ${LOG_FILE}; done"
 	shift 1
@@ -103,6 +87,9 @@ function run_npb_omp_kernel() {
 
 export -f run_npb_omp_kernel
 
+####################################################################################################
+# NAS PARALLEL BENCHMARK MPI KERNELS
+####################################################################################################
 function run_npb_mpi_kernel() {
 	local COMMAND=""
 	local NPB_KERNEL=${1}
@@ -128,6 +115,9 @@ function run_npb_mpi_kernel() {
 
 export -f run_npb_mpi_kernel
 
+####################################################################################################
+# APACHE SPARK (SMUSKET)
+####################################################################################################
 function run_spark() {
   CORES_ARRAY=("$@")
 	NUM_THREADS=1
@@ -147,6 +137,9 @@ function run_spark() {
 
 export -f run_spark
 
+####################################################################################################
+# FIO
+####################################################################################################
 function run_fio() {
   CORES_ARRAY=("$@")
   NUM_THREADS=1
@@ -174,3 +167,32 @@ function run_fio() {
 }
 
 export -f run_fio
+
+####################################################################################################
+# GEEKBENCH
+####################################################################################################
+function run_geekbench() {
+	print_timestamp "GEEKBENCH (CORES = ${CURRENT_CORES}) START"
+	taskset -c "${CURRENT_CORES}" "${GEEKBENCH_HOME}"/geekbench_x86_64 | tee -a "${LOG_FILE}"
+	print_timestamp "GEEKBENCH (CORES = ${CURRENT_CORES}) STOP"
+	sleep 15
+}
+
+export -f run_geekbench
+
+####################################################################################################
+# SYSBENCH
+####################################################################################################
+function run_sysbench() {
+	print_timestamp "SYSBENCH (CORES = ${CURRENT_CORES}) START"
+	if [ "${OS_VIRT}" == "docker" ]; then
+		docker run --rm --name sysbench -it sysbench "${CURRENT_CORES}" >> "${LOG_FILE}" 2>&1
+	else
+		apptainer run "${SYSBENCH_HOME}"/sysbench.sif "${CURRENT_CORES}" >> "${LOG_FILE}" 2>&1
+	fi
+	print_timestamp "SYSBENCH (CORES = ${CURRENT_CORES}) STOP"
+	sleep 15
+}
+
+export -f run_sysbench
+

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+########################################################################################################################
+# STAIRS-UP: Stress CPU progressively increasing CPU usage from 0 to maximum supported
+########################################################################################################################
 function run_stairs-up() {
   # Get arguments
   NAME="${1}"
@@ -42,6 +45,9 @@ function run_stairs-up() {
 
 export -f run_stairs-up
 
+########################################################################################################################
+# STAIRS-DOWN: Stress CPU progressively decreasing CPU usage from maximum supported to 0
+########################################################################################################################
 function run_stairs-down() {
   # Get arguments
   NAME="${1}"
@@ -84,7 +90,9 @@ function run_stairs-down() {
 
 export -f run_stairs-down
 
-
+########################################################################################################################
+# ZIGZAG: Stress CPU jumping from high CPU values to low CPU values, progressively decreasing the magnitude of the jump
+########################################################################################################################
 function run_zigzag() {
   # Get arguments
   NAME="${1}"
@@ -143,7 +151,9 @@ function run_zigzag() {
 
 export -f run_zigzag
 
-
+########################################################################################################################
+# UNIFORM: Stress CPU taking CPU usage values from an uniform distribution ranging from 0 to maximum supported
+########################################################################################################################
 function run_uniform() {
   # Get arguments
   NAME="${1}"
@@ -156,8 +166,8 @@ function run_uniform() {
   local MAX_STRESS="${STRESS_TIME}"
 
   # Generate uniform distribution between 0 and MAX_LOAD to generate NUM_VALUES values
-  #mapfile -t LOAD_VALUES < <("${TEST_DIR}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}" "100" "0.5")
-  mapfile -t LOAD_VALUES < <("${TEST_DIR}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}")
+  #mapfile -t LOAD_VALUES < <("${BIN_DIR}/${WORKLOAD}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}" "100" "0.5")
+  mapfile -t LOAD_VALUES < <("${BIN_DIR}/${WORKLOAD}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}")
 
   m_echo "Experiment ${NAME}:"
   m_echo "\tStress pattern = ${STRESS_PATTERN}"
@@ -187,6 +197,9 @@ function run_uniform() {
 
 export -f run_uniform
 
+########################################################################################################################
+# UDRT: Same as uniform but also using random stress times between 0 and user-defined stress time
+########################################################################################################################
 function run_udrt() {
   # Uniform Distribution with Randomized Times (UDRT)
   run_uniform "${@}"

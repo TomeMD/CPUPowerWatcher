@@ -2,7 +2,6 @@
 
 # Global directories
 export BIN_DIR="${GLOBAL_HOME}"/bin
-export TEST_DIR="${BIN_DIR}"/test
 export CONF_DIR="${GLOBAL_HOME}"/etc
 export TOOLS_DIR="${GLOBAL_HOME}"/tools
 export LOG_FILE="${LOG_DIR}/${WORKLOAD}.log"

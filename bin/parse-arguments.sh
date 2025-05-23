@@ -27,6 +27,10 @@ Usage: $(basename "$0") [OPTIONS]
                                                   to gradually use all cores from core distribution. Options:
                                 --stressors              Comma-separated list of stressors to run with stress-system.
                                                          [Default: cpu]
+                                --core-distributions     Comma-separated list of core distributions, which represent the order
+                                                         followed by the tool when selecting cores to achieve a desired CPU load level.
+                                                         The supported core distributions depend on the CPU topology.
+                                                         [Default: all]
                                 --stress-pattern         Pattern followed to get groups of cores from the core distribution.
                                                          Patterns: stairs-up, stairs-down, zigzag, uniform or udrt [Default: stairs-up]
                                 --stress-time            Time (in seconds) under stress for each group of cores.
@@ -77,6 +81,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --stressors)
       STRESSORS="${2}"
+      shift 2
+      ;;
+    --core-distributions)
+      CORE_DISTRIBUTIONS="${2}"
       shift 2
       ;;
     --stress-pattern)

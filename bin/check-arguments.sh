@@ -1,18 +1,29 @@
 #!/usr/bin/env bash
 
+# First print logo to avoid hiding warnings
 show_logo
 
+SUPPORTED_OS_VIRT=("docker" "apptainer")
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
 SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag" "uniform" "udrt")
 IDLE_SENSITIVE_PATTERNS=("uniform" "udrt")
+declare -A SOCKET_SUPPORTED_DISTRIBUTIONS=(
+  [single-socket]="Single_Core,Group_P,Group_P_and_L,Group_1P_2L"
+  [multi-socket]="Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
+)
 
-if [ "${OS_VIRT}" != "docker" ] && [ "${OS_VIRT}" != "apptainer" ]; then
-  m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Use 'docker' or 'apptainer'"
+if ! item_is_in_list "${OS_VIRT}" "${SUPPORTED_OS_VIRT[@]}" >> /dev/null 2>&1; then
+  m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Supported engines: [${SUPPORTED_OS_VIRT[*]}]"
   exit 1
 fi
 
 if ! [ -x "$(command -v "${OS_VIRT}")" ]; then
   m_err "OS Virtualization Technology (${OS_VIRT}) is not installed"
+  exit 1
+fi
+
+if [ -z "${PYTHON_HOME}" ]; then
+  m_err "Python 3 is not installed. You must install Python 3 to use CPUPowerWatcher"
   exit 1
 fi
 
@@ -32,28 +43,41 @@ if [ "${SOCKETS}" -gt "2" ] ; then
 fi
 
 # Check supported workloads
-SUPPORTED=0
-for SUP_WORKLOAD in "${SUPPORTED_WORKLOADS[@]}"; do
-    if [ "${SUP_WORKLOAD}" = "${WORKLOAD}" ]; then
-        SUPPORTED=1
-        break
-    fi
-done
-if [ "${SUPPORTED}" -eq  "0" ]; then
-    m_err "Workload (${WORKLOAD}) not supported. Supported workloads [${SUPPORTED_WORKLOADS[*]}]"
-    exit 1
+if ! item_is_in_list "${WORKLOAD}" "${SUPPORTED_WORKLOADS[@]}" >> /dev/null 2>&1; then
+  m_err "Workload (${WORKLOAD}) not supported. Supported workloads [${SUPPORTED_WORKLOADS[*]}]"
+  exit 1
 fi
 
 if [ "${WORKLOAD}" == "stress-system" ]; then
-  # Check supported patterns
-  SUPPORTED=0
-  for SUP_PATTERN in "${SUPPORTED_PATTERNS[@]}"; do
-      if [ "${SUP_PATTERN}" = "${STRESS_PATTERN}" ]; then
-          SUPPORTED=1
-          break
+  # Check CPU topology is supported
+  if [ "${SOCKETS}" -gt "2" ]; then
+    m_err "Number of sockets (${SOCKETS}) not yet supported for ${WORKLOAD}. Aborting tests..."
+    exit 1
+  fi
+
+  # Check supported core distributions for current CPU topology
+  IFS=',' read -r -a SUPPORTED_DISTRIBUTIONS <<< "${SOCKET_SUPPORTED_DISTRIBUTIONS[${CPU_TOPOLOGY}]}"
+  if [ "${CORE_DISTRIBUTIONS}" == "all" ]; then
+    FINAL_CORE_DISTRIBUTIONS=("${SUPPORTED_DISTRIBUTIONS[@]}")
+  else
+    # Get all of the user-defined core distributions that are supported for current CPU topology
+    IFS=',' read -ra CORE_DIST_ARRAY <<< "${CORE_DISTRIBUTIONS}"
+    for CORE_DIST in "${CORE_DIST_ARRAY[@]}"; do
+      if item_is_in_list "${CORE_DIST}" "${SUPPORTED_DISTRIBUTIONS[@]}" >> /dev/null 2>&1; then
+        FINAL_CORE_DISTRIBUTIONS+=("${CORE_DIST}")
+      else
+        m_warn "Core distribution ${CORE_DIST} not supported. It will be ignored..."
       fi
-  done
-  if [ "${SUPPORTED}" -eq  "0" ]; then
+    done
+    # Check that at least one of the specified core distributions is supported
+    if [ ${#FINAL_CORE_DISTRIBUTIONS[@]} -eq 0 ]; then
+      m_err "Any of the specified core distributions is supported for ${CPU_TOPOLOGY} CPUs. Supported distributions: [${SUPPORTED_DISTRIBUTIONS[*]}]"
+      exit 1
+    fi
+  fi
+
+  # Check supported patterns
+  if ! item_is_in_list "${STRESS_PATTERN}" "${SUPPORTED_PATTERNS[@]}" >> /dev/null 2>&1; then
       m_err "Pattern (${STRESS_PATTERN}) not supported. Supported patterns [${SUPPORTED_PATTERNS[*]}]"
       exit 1
   fi
@@ -68,19 +92,12 @@ if [ "${WORKLOAD}" == "stress-system" ]; then
     exit 1
   fi
 
-  SENSITIVE=0
-  for SENSITIVE_PATTERN in "${IDLE_SENSITIVE_PATTERNS[@]}"; do
-    if [ "${SENSITIVE_PATTERN}" = "${STRESS_PATTERN}" ]; then
-      SENSITIVE=1
-      break
-    fi
-  done
-  if [ "${SENSITIVE}" -eq "1" ]  && [ "${IDLE_TIME}" -gt "0" ]; then
+  SENSITIVE=$(item_is_in_list "${STRESS_PATTERN}" "${IDLE_SENSITIVE_PATTERNS[@]}")
+  if [ "${SENSITIVE}" -eq "0" ]  && [ "${IDLE_TIME}" -gt "0" ]; then
     m_warn "Idle time must be 0 when using pattern ${STRESS_PATTERN} (if greater than 0 it adds bias to the distribution). Trimming idle time from ${IDLE_TIME} to 0."
     IDLE_TIME=0
   fi
 fi
-
 
 if [ "${WORKLOAD}" == "spark" ]; then
   if [ ! -d "${SPARK_DATA_DIR}" ]; then
@@ -91,13 +108,8 @@ if [ "${WORKLOAD}" == "spark" ]; then
     m_err "JAVA_HOME is not set. You must set JAVA_HOME to use Spark"
     exit 1
   fi
-  if [ -z "${PYTHON_HOME}" ]; then
-    m_err "Python 3 is not installed. You must install Python 3 to use Spark"
-    exit 1
-  fi
 fi
 
 if [ "${WORKLOAD}" == "fio" ] && [ "${ADD_IO_NOISE}" -ne "0" ]; then
   m_warn "It's not consistent to use fio with I/O noise because both run fio"
-  sleep 2
 fi

@@ -6,7 +6,7 @@
 ###################################################################################################
 if [ "${GET_BASE_MEASUREMENTS}" -ne "0" ]; then
   m_echo "Getting base measurements to know the overhead of the monitoring agents"
-  . "${TEST_DIR}"/get-base-measurements.sh
+  . "${BIN_DIR}"/get-base-measurements.sh
 fi
 
 ###################################################################################################
@@ -25,46 +25,12 @@ if [ "${ADD_IO_NOISE}" -ne "0" ]; then
 fi
 
 # Load workload functions
-. "${TEST_DIR}"/load-workload-functions.sh
+. "${BIN_DIR}"/load-workload-functions.sh
 
-m_echo "Running ${WORKLOAD} tests..."
-###################################################################################################
-# CUSTOM TESTS MODE
-# If --custom-tests was used, source the specified file
-###################################################################################################
 if [ "${CUSTOM_TESTS}" -ne "0" ]; then
   m_echo "Custom tests mode is active. Running custom tests from ${CUSTOM_TESTS_FILE}"
   . "${CUSTOM_TESTS_FILE}"
-###################################################################################################
-# STRESS-SYSTEM WORKLOAD
-###################################################################################################
-elif [ "${WORKLOAD}" == "stress-system" ]; then
-  # Load parameters for the specified stress pattern
-  . "${TEST_DIR}"/load-stress-params.sh
-  # Load pattern functions
-  . "${TEST_DIR}"/load-stress-patterns.sh
-
-  # Run predefined tests for single-socket CPUs and multi-socket CPUs (one test per core distribution)
-  if [ "${SOCKETS}" -eq "1" ]; then
-    . "${TEST_DIR}"/stress-tests-singlesocket.sh
-  elif [ "${SOCKETS}" -eq "2" ]; then
-    . "${TEST_DIR}"/stress-tests-multisocket.sh
-  else
-    m_echo "Number of sockets (${SOCKETS}) not yet supported. Aborting tests..."
-  fi
-###################################################################################################
-# NPB WORKLOAD
-###################################################################################################
-elif [ "${WORKLOAD}" == "npb" ]; then
-  . "${TEST_DIR}"/npb-tests.sh
-###################################################################################################
-# SPARK WORKLOAD (SMUSKET)
-###################################################################################################
-elif [ "${WORKLOAD}" == "spark" ]; then
-  . "${TEST_DIR}"/spark-tests.sh
-###################################################################################################
-# FIO WORKLOAD
-###################################################################################################
-elif [ "${WORKLOAD}" == "fio" ]; then
-  . "${TEST_DIR}"/fio-tests.sh
+else
+  m_echo "Running ${WORKLOAD} tests..."
+  . "${BIN_DIR}/${WORKLOAD}/run-tests.sh"
 fi

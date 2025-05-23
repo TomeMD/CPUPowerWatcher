@@ -6,6 +6,11 @@ export THREADS=$(nproc)
 export THEORETICAL_THREADS=$((PHY_CORES_PER_CPU * SOCKETS * 2))
 export MAX_SUPPORTED_LOAD=$(( THREADS * 100 ))
 
+export CPU_TOPOLOGY="single-socket"
+if [ "${SOCKETS}" -gt "1" ]; then
+  CPU_TOPOLOGY="multi-socket"
+fi
+
 export MULTITHREADING_SUPPORT="FULLY SUPPORTED"
 if [ "${THREADS}" -lt "${THEORETICAL_THREADS}" ]; then
   if [ "${THREADS}" -gt "$(( THEORETICAL_THREADS / 2 ))" ]; then

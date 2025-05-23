@@ -49,6 +49,7 @@ function print_conf() {
     m_echo "Workload = ${WORKLOAD}"
     if [ "${WORKLOAD}" == "stress-system" ]; then
       m_echo "\tStressors = [${STRESSORS}]"
+      m_echo "\tCore distributions = [${FINAL_CORE_DISTRIBUTIONS[*]}]"
       m_echo "\tCPU stress pattern = ${STRESS_PATTERN}"
       m_echo "\tCPU stress time = ${STRESS_TIME}s"
       m_echo "\tCPU idle time = ${IDLE_TIME}s"
@@ -62,6 +63,7 @@ function print_conf() {
     fi
     m_echo "Hardware info:"
     m_echo "\tPhysical cores per socket: ${PHY_CORES_PER_CPU}"
+    m_echo "\tCPU topology: ${CPU_TOPOLOGY}"
     m_echo "\tNumber of sockets: ${SOCKETS}"
     m_echo "\tNumber of threads: ${THREADS}"
     m_echo "\tMaximum supported load: ${MAX_SUPPORTED_LOAD}"
@@ -112,58 +114,17 @@ function get_comma_separated_list() {
 
 export -f get_comma_separated_list
 
-function start_cpu_monitor() {
-	CPU_MONITOR_STARTED=0
-	MAX_TRIES=3
-	while [ "${CPU_MONITOR_STARTED}" -eq 0 ] && [ "${MAX_TRIES}" -ne "0" ]
-	do
-      "${CPU_MONITOR_HOME}"/get-cpu-metrics.sh "${CURRENT_CORES}" "${INFLUXDB_HOST}" "${INFLUXDB_BUCKET}" > /dev/null 2>&1 &
-      CPU_MONITOR_PID=$!
-      sleep 1
-      if ps -p "${CPU_MONITOR_PID}" > /dev/null; then
-        CPU_MONITOR_STARTED=1
-        m_echo "CPU monitoring agent succesfully started. (PID = ${CPU_MONITOR_PID})"
-      else
-        MAX_TRIES=$(( MAX_TRIES - 1 ))
-        m_warn "Error while starting CPU monitoring agent. Trying again."
-      fi
-	done
-
-	if [ "${MAX_TRIES}" -eq "0" ]; then
-	  m_err "Exceeded maximum number of tries to start CPU monitor (cores = ${CURRENT_CORES})"
-	  exit 1
-	fi
-
-    # Move CPU monitor to first core to account its usage on the models from the start, as core 0 is always included
-    if [ -n "${CPU_MONITOR_PID}" ]; then
-      taskset -cp "0" "${CPU_MONITOR_PID}"
-      m_echo "Changed CPU monitor (pid = ${CPU_MONITOR_PID}) affinity to core 0"
-    fi
+function item_is_in_list() {
+  local MATCH="${1}"
+  shift 1
+  local LIST=("${@}")
+  for ITEM in "${LIST[@]}"; do
+    [[ "${ITEM}" == "${MATCH}" ]] && echo "0" && return 0
+  done
+  echo "1" && return 1
 }
 
-export -f start_cpu_monitor
-
-function stop_cpu_monitor() {
-    CPU_MONITOR_KILLED=0
-    MAX_TRIES=3
-    while [ "${CPU_MONITOR_KILLED}" -eq 0 ] && [ "${MAX_TRIES}" -ne "0" ]
-    do
-      kill "${CPU_MONITOR_PID}" > /dev/null 2>&1
-      if ps -p "${CPU_MONITOR_PID}" > /dev/null; then
-        MAX_TRIES=$(( MAX_TRIES - 1 ))
-        m_err "Error while killing CPU monitoring agent. (PID = ${CPU_MONITOR_PID})"
-      else
-        CPU_MONITOR_KILLED=1
-        m_echo "CPU monitoring agent succesfully killed. (PID = ${CPU_MONITOR_PID})"
-      fi
-    done
-    if [ "${MAX_TRIES}" -eq "0" ]; then
-      m_err "Exceeded maximum number of tries to kill CPU monitor."
-      exit 1
-    fi
-}
-
-export -f stop_cpu_monitor
+export -f item_is_in_list
 
 function get_str_list_from_array() {
   local ARRAY=("${@}")
@@ -180,12 +141,3 @@ function get_str_list_from_array() {
 }
 
 export -f get_str_list_from_array
-
-function idle_cpu() {
-	print_timestamp "IDLE START"
-	sleep 30
-	print_timestamp "IDLE STOP"
-	sleep 5
-}
-
-export -f idle_cpu
