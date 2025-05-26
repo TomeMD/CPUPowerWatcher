@@ -163,11 +163,12 @@ function run_uniform() {
   shift 4
   local CORES_DISTRIBUTION=("${@}")
   local MAX_LOAD=$(( ${#CORES_DISTRIBUTION[@]} * 100 ))
-  local MAX_STRESS="${STRESS_TIME}"
+  local ORIGINAL_TIME="${STRESS_TIME}"
 
   # Generate uniform distribution between 0 and MAX_LOAD to generate NUM_VALUES values
   #mapfile -t LOAD_VALUES < <("${BIN_DIR}/${WORKLOAD}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}" "100" "0.5")
   mapfile -t LOAD_VALUES < <("${BIN_DIR}/${WORKLOAD}/generate-uniform.py" "${NUM_VALUES}" "0" "${MAX_LOAD}")
+  mapfile -t TIME_VALUES < <("${BIN_DIR}/${WORKLOAD}/generate-uniform.py" "${NUM_VALUES}" "0" "${STRESS_TIME}")
 
   m_echo "Experiment ${NAME}:"
   m_echo "\tStress pattern = ${STRESS_PATTERN}"
@@ -176,23 +177,28 @@ function run_uniform() {
 
   # Run tests following a uniform pattern
   local START_TEST=$(date +%s%N)
-  for LOAD in "${LOAD_VALUES[@]}"; do
+  for i in $(seq 0 $(( NUM_VALUES - 1 ))); do
+    LOAD="${LOAD_VALUES[${i}]}"
+
+    # If random time is required take value from uniform distribution ranging from 0 to user-defined stress time (UDRT)
+    if [ "${RANDOM_TIME}" -gt "0" ]; then
+      STRESS_TIME="${TIME_VALUES[${i}]}"
+    fi
+
     # We need 1 core for 1-100 CPU load, 2 for 101-200, 3 for 201-300...
     NEEDED_CORES=$(( (LOAD + 99) / 100 ))
 
     # Get first NEEDED_CORES cores from CORES_DISTRIBUTION list
     CURRENT_CORES=$(get_str_list_from_array ${CORES_DISTRIBUTION[@]:0:${NEEDED_CORES}})
 
-    # If random time is required a random number between 0 and STRESS_TIME is generated as new stress time (UDRT)
-    if [ "${RANDOM_TIME}" -gt "0" ]; then
-      STRESS_TIME=$(( RANDOM % (MAX_STRESS + 1) ))
-    fi
-
     # Run workload
     "${WORKLOAD_FUNCTION}"
   done
   local END_TEST=$(date +%s%N)
   print_time "${START_TEST}" "${END_TEST}"
+
+  # Reset stress time to its original value
+  STRESS_TIME="${ORIGINAL_TIME}"
 }
 
 export -f run_uniform

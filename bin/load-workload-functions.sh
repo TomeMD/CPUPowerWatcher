@@ -50,7 +50,7 @@ function run_stress-system() {
 	sleep "${STRESS_TIME}"
 
 	# Apptainer requires using instances to apply CPU constraints, thus an instance must be deployed and destroyed
-	if [ "${OLD_LOAD}" -ge "1" ] && [ "${OS_VIRT}" == "apptainer" ]; then
+	if [ "${OLD_LOAD}" -gt "0" ] && [ "${OS_VIRT}" == "apptainer" ]; then
       sudo apptainer instance stop stress_system
 	fi
 	print_timestamp "STRESS-TEST (CORES = ${CURRENT_CORES}) STOP"
