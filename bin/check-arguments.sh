@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# First print logo to avoid hiding warnings
-show_logo
-
 SUPPORTED_OS_VIRT=("docker" "apptainer")
 SUPPORTED_WORKLOADS=("stress-system" "npb" "fio" "spark" "sysbench" "geekbench")
 SUPPORTED_PATTERNS=("stairs-up" "stairs-down" "zigzag" "uniform" "udrt")
@@ -12,6 +9,25 @@ declare -A SOCKET_SUPPORTED_DISTRIBUTIONS=(
   [multi-socket]="Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
 )
 
+# First print logo to avoid hiding warnings
+show_logo
+
+########################################################################################################################
+# GENERAL CHECKS
+########################################################################################################################
+if [ "${SOCKETS}" -gt "2" ] ; then
+  m_err "Number of sockets (${SOCKETS}) not supported. Number of sockets must be 1 or 2"
+  exit 1
+fi
+
+if [ "${CUSTOM_TESTS}" -eq "1" ] && [ ! -f "${CUSTOM_TESTS_FILE}" ]; then
+  m_err "Provided custom tests file doesn't exists: ${CUSTOM_TESTS_FILE}"
+  exit 1
+fi
+
+########################################################################################################################
+# OS VIRTUALIZATION TECHNOLOGY
+########################################################################################################################
 if ! item_is_in_list "${OS_VIRT}" "${SUPPORTED_OS_VIRT[@]}" >> /dev/null 2>&1; then
   m_err "OS Virtualization Technology (${OS_VIRT}) not supported. Supported engines: [${SUPPORTED_OS_VIRT[*]}]"
   exit 1
@@ -22,32 +38,44 @@ if ! [ -x "$(command -v "${OS_VIRT}")" ]; then
   exit 1
 fi
 
-if [ -z "${PYTHON_HOME}" ]; then
-  m_err "Python 3 is not installed. You must install Python 3 to use CPUPowerWatcher"
+########################################################################################################################
+# PYTHON
+########################################################################################################################
+if [ -x "$(command -v python3)" ]; then
+  PYTHON_CMD="$(readlink -f $(which python3))"
+elif [ -x "$(command -v python)" ]; then
+  PYTHON_CMD="$(readlink -f $(which python))"
+fi
+
+if [ -z "${PYTHON_CMD}" ]; then
+  m_err "Python is not installed. You must install python to use CPUPowerWatcher"
   exit 1
 fi
 
+PYTHON_VERSION=$("${PYTHON_CMD}" --version 2>&1 | awk '{print $2}')
+if [ "${PYTHON_VERSION:0:1}" != "3" ]; then
+  m_warn "Python3 is not installed (available version is ${PYTHON_VERSION}). This may cause unexpected behaviour when using stress-system (UDRT) or spark workloads."
+fi
+
+########################################################################################################################
+# INFLUXDB
+########################################################################################################################
 if ! ping -c 1 "${INFLUXDB_HOST}" &> /dev/null; then
   m_err "InfluxDB host (${INFLUXDB_HOST}) is not reachable"
   exit 1
 fi
 
-if [ "${CUSTOM_TESTS}" -eq "1" ] && [ ! -f "${CUSTOM_TESTS_FILE}" ]; then
-  m_err "Provided custom tests file doesn't exists: ${CUSTOM_TESTS_FILE}"
-  exit 1
-fi
-
-if [ "${SOCKETS}" -gt "2" ] ; then
-  m_err "Number of sockets (${SOCKETS}) not supported. Number of sockets must be 1 or 2"
-  exit 1
-fi
-
-# Check supported workloads
+########################################################################################################################
+# WORKLOADS
+########################################################################################################################
 if ! item_is_in_list "${WORKLOAD}" "${SUPPORTED_WORKLOADS[@]}" >> /dev/null 2>&1; then
   m_err "Workload (${WORKLOAD}) not supported. Supported workloads [${SUPPORTED_WORKLOADS[*]}]"
   exit 1
 fi
 
+########################################################################################################################
+# STRESS-SYSTEM
+########################################################################################################################
 if [ "${WORKLOAD}" == "stress-system" ]; then
   # Check CPU topology is supported
   if [ "${SOCKETS}" -gt "2" ]; then
@@ -99,17 +127,27 @@ if [ "${WORKLOAD}" == "stress-system" ]; then
   fi
 fi
 
+########################################################################################################################
+# APACHE SPARK (SMUSKET)
+########################################################################################################################
 if [ "${WORKLOAD}" == "spark" ]; then
   if [ ! -d "${SPARK_DATA_DIR}" ]; then
     m_err "Specified Spark Data directory doesn't exist: ${SPARK_DATA_DIR}"
     exit 1
   fi
+  PYTHON_HOME="${PYTHON_CMD}"
+  JAVA_HOME="$(dirname $(dirname $(readlink -f $(which java))))"
   if [ -z "${JAVA_HOME}" ]; then
-    m_err "JAVA_HOME is not set. You must set JAVA_HOME to use Spark"
+    m_err "JAVA_HOME is not set. You must set JAVA_HOME to use Spark, Please check Java is installed."
     exit 1
   fi
 fi
 
+########################################################################################################################
+# FIO
+########################################################################################################################
 if [ "${WORKLOAD}" == "fio" ] && [ "${ADD_IO_NOISE}" -ne "0" ]; then
   m_warn "It's not consistent to use fio with I/O noise because both run fio"
 fi
+
+exit 0

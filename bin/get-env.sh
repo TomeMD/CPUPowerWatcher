@@ -6,6 +6,9 @@ export CONF_DIR="${GLOBAL_HOME}"/etc
 export TOOLS_DIR="${GLOBAL_HOME}"/tools
 export LOG_FILE="${LOG_DIR}/${WORKLOAD}.log"
 
+# Global environment variables
+export PYTHON_CMD=""
+
 # CPUCollector
 export GLANCES_HOME="${TOOLS_DIR}"/CPUCollector/glances
 export CPU_MONITOR_HOME="${TOOLS_DIR}"/CPUCollector/cpumetrics
@@ -24,8 +27,8 @@ export NPB_MPI_HOME="${NPB_HOME}"/NPB3.4-MPI
 # Spark Smusket
 export SPARK_HOME="${TOOLS_DIR}"/spark-${SPARK_VERSION}-bin-hadoop"${SPARK_VERSION:0:1}"
 export SMUSKET_HOME="${TOOLS_DIR}"/smusket
-export PYTHON_HOME="$(which python3)"
-export JAVA_HOME="$(dirname $(dirname $(readlink -f $(which java))))"
+export PYTHON_HOME=""
+export JAVA_HOME=""
 
 # Sysbench
 export SYSBENCH_HOME="${TOOLS_DIR}"/sysbench
