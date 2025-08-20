@@ -149,5 +149,3 @@ fi
 if [ "${WORKLOAD}" == "fio" ] && [ "${ADD_IO_NOISE}" -ne "0" ]; then
   m_warn "It's not consistent to use fio with I/O noise because both run fio"
 fi
-
-exit 0
