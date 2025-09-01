@@ -18,10 +18,16 @@
 #
 
 ################################################################################################
-# CONFIGURATION PARAMETERS
+# ADDITIONAL CONFIGURATION PARAMETERS
 ################################################################################################
 STRESS_LOAD_TYPES=("all" "sysinfo" "sysinfo_all")
 CPU_TOPOLOGY="multisocket"  # "singlesocket" or "multisocket"
+declare -A SOCKET_CORE_DISTRIBUTIONS=(
+  [singlesocket]="Single_Core,Group_P,Group_P_and_L,Group_1P_2L"
+  [multisocket]="Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
+)
+# Single-socket distributions:  "Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
+# Multi-socket distributions:   "Group_PP_LL,Group_P,Group_P_and_L,Single_Core,Group_1P_2L,Spread_P_and_L,Spread_P,Spread_PP_LL"
 ################################################################################################
 
 if [ -z "${2}" ]; then
@@ -45,10 +51,6 @@ rm -rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 
 # Define core distributions by topology
-declare -A SOCKET_CORE_DISTRIBUTIONS=(
-  [singlesocket]="Single_Core,Group_P,Group_P_and_L,Group_1P_2L"
-  [multisocket]="Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
-)
 IFS=',' read -r -a CORES_DISTRIBUTIONS <<< "${SOCKET_CORE_DISTRIBUTIONS[$CPU_TOPOLOGY]}"
 
 # Collect idle timestamp files
@@ -81,7 +83,7 @@ append_with_idle() {
 
 # Process a single stress load type
 process_load() {
-  local LOAD="$1"
+  local LOAD="${1}"
   local INPUT_DIR="${BASE_DIR}/${LOAD}"
   echo "=============================================================================="
   echo " Processing stress load: LOAD"
@@ -94,18 +96,19 @@ process_load() {
     local OUT_CORE="${OUTPUT_DIR}/${CORE_DIST}.timestamps"
     local OUT_LOAD="${OUTPUT_DIR}/${LOAD}.timestamps"
 
+    # Append timestamps to core distribution file
     append_with_idle "${OUT_CORE}" "${CORE_DIST}.timestamps"
     cat "${INPUT_FILE}" >> "${OUT_CORE}"
     echo "  + Appended (IN) ${CORE_DIST}.timestamps → (OUT) ${CORE_DIST}.timestamps"
 
+    # Append timestamps to workload file
     append_with_idle "${OUT_LOAD}" "${LOAD}.timestamps"
     cat "${INPUT_FILE}" >> "${OUT_LOAD}"
     echo "  + Appended (IN) ${CORE_DIST}.timestamps → (OUT) ${LOAD}.timestamps"
   done
 
-  # Append to general result, skipping idle lines
-  awk "NR > ${IDLE_LINE_COUNT}" "${OUTPUT_DIR}/${LOAD}.timestamps" \
-    >> "${OUTPUT_DIR}/${RESULTS_NAME}.timestamps"
+  # Append workload timestamps to general file, skipping idle lines
+  awk "NR > ${IDLE_LINE_COUNT}" "${OUTPUT_DIR}/${LOAD}.timestamps" >> "${OUTPUT_DIR}/${RESULTS_NAME}.timestamps"
   echo "  + Appended (OUT) ${LOAD}.timestamps (skipped ${IDLE_LINE_COUNT} lines) → (OUT) ${RESULTS_NAME}.timestamps"
   echo
 }
