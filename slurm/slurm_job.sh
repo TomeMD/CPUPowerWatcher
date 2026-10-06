@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #SBATCH --nodes 1
 #SBATCH --exclusive
@@ -39,12 +39,12 @@ for TEST in "${TESTS[@]}"; do
     # Create output directory for current test
     mkdir -p "${TEST_LOG_DIR}"
 
-    echo "Running test ${TEST} and saving logs to ${TEST_LOG_DIR}"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S%z')] Running test ${TEST} and saving logs to ${TEST_LOG_DIR}"
 
     # Run test
     "${PLATFORM_HOME}/run.sh" -b "${SLURM_JOB_PARTITION}" -o "${TEST_LOG_DIR}" ${TEST_PARAMS[${TEST}]} > "${TEST_LOG_FILE}" 2>&1
 
-    echo "Test ${TEST} finished"
+    echo "[$(date -u '+%Y-%m-%d %H:%M:%S%z')] Test ${TEST} finished"
 
     # Sleep between tests
     sleep 600

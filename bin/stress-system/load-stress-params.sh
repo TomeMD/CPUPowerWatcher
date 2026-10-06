@@ -47,6 +47,6 @@ elif [ "${STRESS_PATTERN}" = "uniform" ]; then # <NUM_VALUES> <RANDOM_TIME>
 elif [ "${STRESS_PATTERN}" = "udrt" ]; then # <NUM_VALUES> <RANDOM_TIME>
   # Follow an uniform distribution between 0 and 100 (one core) composed of 100 values and randomized times
   PARAMETERS_DICT[Single_Core]="100,1"
-  # Follow an uniform distribution between 0 and maximum composed of 500 values and randomized times
-  PARAMETERS_DICT[Multi_Core]="6000,1"
+  # Follow an uniform distribution between 0 and maximum composed of 1000 values and randomized times
+  PARAMETERS_DICT[Multi_Core]="1000,1"
 fi
