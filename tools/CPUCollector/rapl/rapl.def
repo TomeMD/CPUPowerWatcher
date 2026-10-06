@@ -1,12 +1,9 @@
 Bootstrap: docker
-From: debian:bullseye-slim
+From: debian:bookworm-slim
 Stage: builder
 
-%post 
-  apt-get update && apt-get install -y sudo libcap2-bin libcurl3-gnutls
-
 %files
-    ./src/papi-7.2.0 /src/papi-7.2.0
+    ./src/papi-7.2.0 /var/lib/rapl/papi-7.2.0
     ./src/rapl_plot /var/lib/rapl/rapl_plot
 
 %post
@@ -15,11 +12,7 @@ Stage: builder
     export PAPI_HOME=${RAPL_HOME}/papi-${PAPI_VERSION}
     export RAPL_SRC=/var/lib/rapl/rapl_plot
 
-    apt-get install -y build-essential gcc git
-
-    # Copy PAPI source code
-    mkdir -p ${RAPL_HOME}
-    cp -R /src/papi-7.2.0 ${PAPI_HOME}
+    apt-get update && apt-get install -y --no-install-recommends build-essential
 
     # Compile PAPI
     cd ${PAPI_HOME}/src
@@ -29,22 +22,22 @@ Stage: builder
 
     # Compile RAPL tool
     cd ${RAPL_SRC}
-    make
-    setcap cap_sys_rawio=ep ${RAPL_SRC}/rapl_plot
-    chmod +x ${RAPL_SRC}/rapl_plot
+    rm -f rapl_plot rapl_plot.o
+    make CC="gcc -static -s"
 
 Bootstrap: docker
-From: debian:bullseye-slim
+From: busybox:1.37
 Stage: final
 
-%post 
-  apt-get update && apt-get install -y sudo libcap2-bin libcurl3-gnutls
-
 %files from builder
-  /var/lib/rapl/rapl_plot/rapl_plot /usr/local/bin
+    /var/lib/rapl/rapl_plot/rapl_plot /usr/local/bin/rapl_plot
+
+%post
+    # Name resolution of the static binary
+    echo "hosts: files dns" > /etc/nsswitch.conf
 
 %runscript
-  /usr/local/bin/rapl_plot "$@"
+    exec /usr/local/bin/rapl_plot "$@"
 
 %startscript
-  /usr/local/bin/rapl_plot "$@"
+    exec /usr/local/bin/rapl_plot "$@"

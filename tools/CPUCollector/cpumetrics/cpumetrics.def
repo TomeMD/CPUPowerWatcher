@@ -1,5 +1,6 @@
 Bootstrap: docker
-From: debian:bullseye-slim
+From: debian:bookworm-slim
+Stage: builder
 
 %files
     ./src/cpumetrics /var/lib/cpumetrics
@@ -8,16 +9,29 @@ From: debian:bullseye-slim
     export CPUMETRICS_SRC=/var/lib/cpumetrics
 
     # Install dependencies
-    apt-get update && apt-get install -y msr-tools build-essential gcc git
+    apt-get update && apt-get install -y --no-install-recommends build-essential
 
     # Compile cpumetrics tool
     cd "${CPUMETRICS_SRC}"
-    make
-    chmod +x "${CPUMETRICS_SRC}/cpumetrics"
-    mv "${CPUMETRICS_SRC}/cpumetrics" /usr/local/bin/cpumetrics
+    make clean
+    make LDFLAGS="-static -s"
+
+# The final image is Alpine in order to have lscpu support
+Bootstrap: docker
+From: alpine:3.21
+Stage: final
+
+%files from builder
+    /var/lib/cpumetrics/cpumetrics /usr/local/bin/cpumetrics
+
+%post
+    # Add lscpu
+    apk add --no-cache lscpu
+    # Name resolution of the static binary
+    echo "hosts: files dns" > /etc/nsswitch.conf
 
 %startscript
-  /usr/local/bin/cpumetrics "$@"
+    exec /usr/local/bin/cpumetrics "$@"
 
 %runscript
-  /usr/local/bin/cpumetrics "$@"
+    exec /usr/local/bin/cpumetrics "$@"
