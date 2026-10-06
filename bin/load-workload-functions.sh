@@ -99,7 +99,8 @@ function run_npb_mpi_kernel() {
 	NUM_THREADS=$(( BASE * BASE ))
 	while [ "${NUM_THREADS}" -le "${THREADS}" ]
 	do
-	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --bind-to none --mca btl ^openib ${NPB_MPI_HOME}/${NPB_KERNEL} | tee -a ${LOG_FILE}; done"
+	    # OpenMPI only has a slot per physical core by default: with hardware threads, NUM_THREADS can exceed physical cores
+	    COMMAND="while true; do rm -f ${GLOBAL_HOME}/btio.epio.out*; mpirun -np ${NUM_THREADS} --use-hwthread-cpus --bind-to none --mca btl ^openib ${NPB_MPI_HOME}/${NPB_KERNEL} | tee -a ${LOG_FILE}; done"
         set_n_cores ${NUM_THREADS}
 	    # start_cpu_monitor
 	    print_timestamp "NPB (CORES = ${CURRENT_CORES}) START"

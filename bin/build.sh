@@ -73,6 +73,10 @@ elif [ "${WORKLOAD}" == "npb" ]; then # NPB KERNELS
 		make bt CLASS=C
 		cd "${NPB_MPI_HOME}"
 		cp config/make.def.template config/make.def
+		# gfortran >= 10 rejects the MPI calls of NPB (mpif.h) that pass arguments of different types
+		if [ "$(mpif90 -dumpversion 2> /dev/null | cut -d. -f1)" -ge 10 ] 2> /dev/null; then
+		  sed -i 's/^FFLAGS.*/& -fallow-argument-mismatch/' config/make.def
+		fi
 		make clean
 		make bt CLASS=C SUBTYPE=epio # epio means each process writes to a different file
 	else
