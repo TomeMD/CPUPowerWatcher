@@ -21,12 +21,12 @@
 # ADDITIONAL CONFIGURATION PARAMETERS
 ################################################################################################
 STRESS_LOAD_TYPES=("all" "sysinfo" "sysinfo_all")
-CPU_TOPOLOGY="multisocket"  # "singlesocket" or "multisocket"
+CPU_TOPOLOGY="${CPU_TOPOLOGY:-auto}" # "singlesocket", "multisocket" or "auto"
 declare -A SOCKET_CORE_DISTRIBUTIONS=(
   [singlesocket]="Single_Core,Group_P,Group_P_and_L,Group_1P_2L"
   [multisocket]="Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
 )
-# Single-socket distributions:  "Single_Core,Group_P,Spread_P,Group_P_and_L,Group_1P_2L,Group_PP_LL,Spread_P_and_L,Spread_PP_LL"
+# Single-socket distributions:  "Single_Core,Group_P,Group_P_and_L,Group_1P_2L"
 # Multi-socket distributions:   "Group_PP_LL,Group_P,Group_P_and_L,Single_Core,Group_1P_2L,Spread_P_and_L,Spread_P,Spread_PP_LL"
 ################################################################################################
 
@@ -49,6 +49,15 @@ fi
 # Prepare output
 rm -rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
+
+# Get CPU topology from the timestamp files (Spread_P only exists with several sockets)
+if [[ "${CPU_TOPOLOGY}" == "auto" ]]; then
+  CPU_TOPOLOGY="singlesocket"
+  if find "${BASE_DIR}" -name "Spread_P.timestamps" | grep -q .; then
+    CPU_TOPOLOGY="multisocket"
+  fi
+  echo "CPU topology (from the timestamp files): ${CPU_TOPOLOGY}"
+fi
 
 # Define core distributions by topology
 IFS=',' read -r -a CORES_DISTRIBUTIONS <<< "${SOCKET_CORE_DISTRIBUTIONS[$CPU_TOPOLOGY]}"
@@ -86,7 +95,7 @@ process_load() {
   local LOAD="${1}"
   local INPUT_DIR="${BASE_DIR}/${LOAD}"
   echo "=============================================================================="
-  echo " Processing stress load: LOAD"
+  echo " Processing stress load: ${LOAD}"
   echo "  INPUT:  ${INPUT_DIR}"
   echo "  OUTPUT: ${OUTPUT_DIR}"
   echo "=============================================================================="
@@ -95,6 +104,10 @@ process_load() {
     local INPUT_FILE="${INPUT_DIR}/${CORE_DIST}.timestamps"
     local OUT_CORE="${OUTPUT_DIR}/${CORE_DIST}.timestamps"
     local OUT_LOAD="${OUTPUT_DIR}/${LOAD}.timestamps"
+    if [[ ! -f "${INPUT_FILE}" ]]; then
+      echo "  ! Missing (IN) ${INPUT_FILE}: skipped" >&2
+      continue
+    fi
 
     # Append timestamps to core distribution file
     append_with_idle "${OUT_CORE}" "${CORE_DIST}.timestamps"
